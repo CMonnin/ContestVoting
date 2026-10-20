@@ -20,7 +20,7 @@ import {
 } from "./admin.ts";
 import { ta, type AdminError, type AdminNotice } from "./adminI18n.ts";
 import { entriesPage, queuePage, settingsPage, votesPage, type Flash } from "./adminViews.ts";
-import { deleteSession, getSessionUser, requestCode, verifyCode, type AuthDeps, type User } from "./auth.ts";
+import { deleteSession, getSessionUser, requestCode, verifyCode, type AuthDeps } from "./auth.ts";
 import { getSetting, setSetting } from "./db.ts";
 import { deleteEntry, getEntryByOwner, listApproved, photoOwner, saveEntry, validateFields } from "./entries.ts";
 import { detectLang, errorText, formatDateTime, t, type ErrorKey, type Lang } from "./i18n.ts";
@@ -28,17 +28,17 @@ import { computePhase, isPhase, type Phase } from "./phase.ts";
 import { deletePhotoFiles, isPhotoName, MAX_PHOTO_BYTES, MAX_PHOTOS, processPhoto, storePhoto } from "./photos.ts";
 import { loadRules } from "./content.ts";
 import { seededShuffle } from "./shuffle.ts";
+import {
+  DEVICE_COOKIE,
+  LANG_COOKIE,
+  SESSION_COOKIE,
+  YEAR_S,
+  type App,
+  type Env,
+  type RouteCtx,
+} from "./routes/context.ts";
 import { castVote, myVote, votingOpen } from "./votes.ts";
 import { entryPage, homePage, landingPage, layout, loginPage, rulesPage, verifyPage } from "./views.ts";
-
-type Env = {
-  Variables: { lang: Lang; user: User | null; deviceId: string; ip: string };
-};
-
-const SESSION_COOKIE = "sid";
-const DEVICE_COOKIE = "did";
-const LANG_COOKIE = "lang";
-const YEAR_S = 365 * 24 * 3600;
 
 const CSP = [
   "default-src 'self'",
@@ -52,12 +52,12 @@ const CSP = [
 
 export function createApp(deps: AuthDeps) {
   const { db, cfg } = deps;
-  const app = new Hono<Env>();
+  const app: App = new Hono<Env>();
 
   const phaseNow = (): Phase =>
     computePhase(deps.now(), cfg, getSetting(db, "phase_override"), getSetting(db, "results_published") === "1");
 
-  const cookieOpts = { path: "/", httpOnly: true, secure: cfg.secureCookies, sameSite: "Lax" as const };
+  const cookieOpts: RouteCtx["cookieOpts"] = { path: "/", httpOnly: true, secure: cfg.secureCookies, sameSite: "Lax" };
 
   app.use(async (c, next) => {
     c.header("Content-Security-Policy", CSP);
@@ -92,8 +92,7 @@ export function createApp(deps: AuthDeps) {
     return next();
   });
 
-  const render = (c: Context<Env>, body: Parameters<typeof layout>[2], status: 200 | 400 | 429 = 200) =>
-    c.html(layout(c.get("lang"), c.get("user"), body), status);
+  const render: RouteCtx["render"] = (c, body, status = 200) => c.html(layout(c.get("lang"), c.get("user"), body), status);
 
   app.get("/healthz", (c) => c.json({ ok: true, phase: phaseNow() }));
 
