@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { Hono, type Context } from "hono";
 import { bodyLimit } from "hono/body-limit";
-import { deleteCookie, getCookie, setCookie } from "hono/cookie";
+import { getCookie, setCookie } from "hono/cookie";
 import {
   approveEntry,
   getResults,
@@ -20,7 +20,7 @@ import {
 } from "./admin.ts";
 import { ta, type AdminError, type AdminNotice } from "./adminI18n.ts";
 import { entriesPage, queuePage, settingsPage, votesPage, type Flash } from "./adminViews.ts";
-import { deleteSession, getSessionUser, requestCode, verifyCode, type AuthDeps } from "./auth.ts";
+import { getSessionUser, type AuthDeps } from "./auth.ts";
 import { getSetting, setSetting } from "./db.ts";
 import { deleteEntry, getEntryByOwner, listApproved, photoOwner, saveEntry, validateFields } from "./entries.ts";
 import { detectLang, errorText, formatDateTime, t, type ErrorKey, type Lang } from "./i18n.ts";
@@ -28,6 +28,7 @@ import { computePhase, isPhase, type Phase } from "./phase.ts";
 import { deletePhotoFiles, isPhotoName, MAX_PHOTO_BYTES, MAX_PHOTOS, processPhoto, storePhoto } from "./photos.ts";
 import { loadRules } from "./content.ts";
 import { seededShuffle } from "./shuffle.ts";
+import { authRoutes } from "./routes/auth.ts";
 import {
   DEVICE_COOKIE,
   LANG_COOKIE,
@@ -38,7 +39,7 @@ import {
   type RouteCtx,
 } from "./routes/context.ts";
 import { castVote, myVote, votingOpen } from "./votes.ts";
-import { entryPage, homePage, landingPage, layout, loginPage, rulesPage, verifyPage } from "./views.ts";
+import { entryPage, homePage, landingPage, layout, rulesPage } from "./views.ts";
 
 const CSP = [
   "default-src 'self'",
@@ -93,6 +94,8 @@ export function createApp(deps: AuthDeps) {
   });
 
   const render: RouteCtx["render"] = (c, body, status = 200) => c.html(layout(c.get("lang"), c.get("user"), body), status);
+  const photosDir = join(cfg.dataDir, "photos");
+  const ctx: RouteCtx = { deps, photosDir, cookieOpts, phaseNow, render };
 
   app.get("/healthz", (c) => c.json({ ok: true, phase: phaseNow() }));
 
@@ -146,43 +149,10 @@ export function createApp(deps: AuthDeps) {
 
   app.get("/rules", (c) => render(c, rulesPage(c.get("lang"), loadRules(cfg.contentDir, c.get("lang")))));
 
-  app.get("/login", (c) => (c.get("user") ? c.redirect("/") : render(c, loginPage(c.get("lang")))));
-
-  app.post("/login", async (c) => {
-    const lang = c.get("lang");
-    const form = await c.req.parseBody();
-    const email = String(form.email ?? "");
-    const res = await requestCode(deps, email, c.get("ip"), phaseNow() !== "landing");
-    if (res.ok) return render(c, verifyPage(lang, res.email));
-    const msg = errorText(lang, res.reason, res.reason === "cooldown" ? { s: res.retryAfterSec } : {});
-    // A cooldown on resend should keep the user on the code screen.
-    if (res.reason === "cooldown") return render(c, verifyPage(lang, email.trim().toLowerCase(), msg), 429);
-    const status = res.reason === "email_limit" || res.reason === "ip_limit" ? 429 : 400;
-    return render(c, loginPage(lang, { email, error: msg }), status);
-  });
-
-  app.post("/login/verify", async (c) => {
-    const lang = c.get("lang");
-    const form = await c.req.parseBody();
-    const email = String(form.email ?? "");
-    const res = verifyCode(deps, email, String(form.code ?? ""), {
-      deviceId: c.get("deviceId"),
-      ip: c.get("ip"),
-      ua: c.req.header("user-agent") ?? "",
-    });
-    if (res.ok) {
-      setCookie(c, SESSION_COOKIE, res.token, { ...cookieOpts, expires: res.expiresAt });
-      return c.redirect("/");
-    }
-    if (res.reason === "wrong") {
-      return render(c, verifyPage(lang, email, errorText(lang, "wrong", { n: res.attemptsLeft })), 400);
-    }
-    return render(c, loginPage(lang, { email, error: errorText(lang, res.reason) }), 400);
-  });
+  authRoutes(app, ctx);
 
   // ---- Entries --------------------------------------------------------------
 
-  const photosDir = join(cfg.dataDir, "photos");
   const canEdit = (p: Phase) => p === "open";
   const canWithdraw = (p: Phase) => p === "open" || p === "voting";
 
@@ -402,12 +372,6 @@ export function createApp(deps: AuthDeps) {
   app.post("/admin/results/unpublish", (c) => {
     unpublishResults(deps, admin(c));
     return back(c, { n: "unpublished" }, "/admin/settings");
-  });
-
-  app.post("/logout", (c) => {
-    deleteSession(db, getCookie(c, SESSION_COOKIE));
-    deleteCookie(c, SESSION_COOKIE, { path: "/" });
-    return c.redirect("/");
   });
 
   return app;
