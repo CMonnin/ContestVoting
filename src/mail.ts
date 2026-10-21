@@ -7,6 +7,15 @@ export interface Mailer {
   send(mail: Mail): Promise<void>;
 }
 
+export function smtpTransport(smtp: NonNullable<Config["smtp"]>) {
+  return nodemailer.createTransport({
+    host: smtp.host,
+    port: smtp.port,
+    secure: smtp.port === 465,
+    auth: { user: smtp.user, pass: smtp.pass },
+  });
+}
+
 export function createMailer(cfg: Config): Mailer {
   if (cfg.mailTransport === "console" || !cfg.smtp) {
     return {
@@ -15,12 +24,7 @@ export function createMailer(cfg: Config): Mailer {
       },
     };
   }
-  const transport = nodemailer.createTransport({
-    host: cfg.smtp.host,
-    port: cfg.smtp.port,
-    secure: cfg.smtp.port === 465,
-    auth: { user: cfg.smtp.user, pass: cfg.smtp.pass },
-  });
+  const transport = smtpTransport(cfg.smtp);
   return {
     async send(mail) {
       await transport.sendMail({ from: cfg.mailFrom, ...mail });

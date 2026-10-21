@@ -55,6 +55,13 @@ docker compose run --rm app node scripts/send-test.ts alice@mcgill.ca bob@ssss.g
 
 Each recipient reports arrival time and whether the email landed in Junk.
 
+Before the DNS records exist, `--verify` checks the SMTP port and
+credentials without sending anything:
+
+```sh
+node --env-file=.env scripts/send-test.ts --verify
+```
+
 To log in before the contest opens, put the address in `ADMIN_EMAILS` or
 `PREVIEW_EMAILS`.
 
