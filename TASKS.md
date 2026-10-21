@@ -4,8 +4,8 @@ Ordered by the critical path. The deliverability test gates everything else.
 
 ## Now (10-20 / 10-21) — external setup (you)
 
-- [ ] Scaleway account; Transactional Email in `fr-par`; add domain `mail.douglasneuroinformatics.ca`; generate SMTP credentials.
-- [ ] DNS (whoever owns it): `halloween2026` A/AAAA → DNP server; Scaleway SPF / DKIM / DMARC / MX records for `mail.` subdomain.
+- [ ] Scaleway account; Transactional Email in `fr-par`; add domain `halloween2026.douglasneuroinformatics.ca` (`mail.` is taken by Mailgun); generate SMTP credentials.
+- [ ] DNS (whoever owns it): `halloween2026` A/AAAA → DNP server; Scaleway SPF / DKIM / DMARC / MX records on `halloween2026` itself.
 - [ ] Confirm Docker + ports 80/443 on the DNP server; add a Caddy site block.
 - [ ] Create the public repo in the DNP org (MIT).
 - [ ] Ask the DRC organizers: FR + EN rules text, admin emails, DRC logo (due 10-24).

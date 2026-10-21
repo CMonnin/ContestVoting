@@ -101,7 +101,7 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     previewEmails: list(env.PREVIEW_EMAILS),
     mailTransport,
     smtp,
-    mailFrom: env.MAIL_FROM?.trim() || "Halloween DRC <noreply@mail.douglasneuroinformatics.ca>",
+    mailFrom: env.MAIL_FROM?.trim() || "Halloween DRC <noreply@halloween2026.douglasneuroinformatics.ca>",
     sessionSecret,
     dataDir: env.DATA_DIR?.trim() || "./data",
     contentDir: env.CONTENT_DIR?.trim() || "./content",
