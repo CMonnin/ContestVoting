@@ -1,0 +1,510 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Halloween at the Douglas 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Creepster&family=Fredoka:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0716;
+    --bg2: #1d0f2e;
+    --orange: #ff7a1a;
+    --glow: #ffb347;
+    --text: #f3e9ff;
+    --muted: #b9a6d1;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { min-height: 100%; }
+  html { scroll-behavior: smooth; }
+  [hidden] { display: none !important; }
+  body {
+    font-family: "Fredoka", system-ui, sans-serif;
+    color: var(--text);
+    background: radial-gradient(ellipse at 50% 0%, var(--bg2) 0%, var(--bg) 65%) fixed, var(--bg);
+    overflow-x: hidden;
+  }
+
+  /* --- moon + floating bats + fog --- */
+  /* --- moon scene: orbiting bats + howling werewolf --- */
+  .sky {
+    position: fixed; top: 3vh; left: 4vw; width: 220px; height: 200px; z-index: 0;
+    transform-origin: top left; pointer-events: none;
+  }
+  .moon {
+    position: absolute; top: 35px; left: 55px; width: 110px; height: 110px; border-radius: 50%; z-index: 1;
+    background: radial-gradient(circle at 35% 35%, #fff8d6, #f2d27a 60%, #c99a3a);
+    box-shadow: 0 0 60px 20px rgba(255, 210, 120, .25);
+    animation: moonglow 8s ease-in-out infinite;
+  }
+  @keyframes moonglow {
+    0%, 30%, 75%, 100% { box-shadow: 0 0 60px 20px rgba(255, 210, 120, .25); }
+    45%, 60% { box-shadow: 0 0 90px 34px rgba(255, 210, 120, .4); }
+  }
+  /* bats follow an ellipse around the moon; they pass behind it on the far (top) half */
+  .obat {
+    position: absolute; top: 0; left: 0; width: var(--w, 26px); z-index: 3;
+    offset-path: path("M15,50 a95,36 0 1,0 190,0 a95,36 0 1,0 -190,0");
+    offset-rotate: 0deg; offset-distance: calc(var(--p) * 100%);
+    animation: orbit var(--dur) linear infinite;
+    animation-delay: calc(var(--p) * var(--dur) * -1);
+  }
+  .obat.wide { offset-path: path("M-15,40 a125,46 0 1,0 250,0 a125,46 0 1,0 -250,0"); }
+  .obat.rev { animation-direction: reverse; }
+  .obat svg { width: 100%; fill: #000; animation: flap .3s ease-in-out infinite alternate; }
+  @keyframes orbit {
+    0%   { offset-distance: 0%;   transform: scale(1);   opacity: .9; z-index: 3; }
+    25%  { offset-distance: 25%;  transform: scale(1.3); opacity: 1; }
+    49%  { z-index: 3; }
+    50%  { offset-distance: 50%;  transform: scale(1);   opacity: .9; }
+    51%  { z-index: 0; }
+    75%  { offset-distance: 75%;  transform: scale(.6);  opacity: .55; }
+    99%  { z-index: 0; }
+    100% { offset-distance: 100%; transform: scale(1);   opacity: .9; z-index: 3; }
+  }
+  .wolf { position: absolute; left: 62px; top: 92px; width: 74px; z-index: 2; overflow: visible; }
+  .wolf .head { transform-box: fill-box; transform-origin: 70% 100%; animation: howl 8s ease-in-out infinite; }
+  @keyframes howl {
+    0%, 30%, 75%, 100% { transform: rotate(-32deg); }
+    40%, 65% { transform: rotate(12deg); }
+  }
+  .wolf .jaw { transform-box: fill-box; transform-origin: 100% 100%; animation: jaw 8s ease-in-out infinite; }
+  @keyframes jaw {
+    0%, 36%, 70%, 100% { transform: rotate(0); }
+    42%, 64% { transform: rotate(-22deg); }
+  }
+  .wolf .wave { fill: none; stroke: #f3e9ff; stroke-width: 1.4; stroke-linecap: round; opacity: 0; animation: wave 8s ease-out infinite; }
+  .wolf .wave:nth-of-type(2) { animation-delay: .35s; }
+  .wolf .wave:nth-of-type(3) { animation-delay: .7s; }
+  @keyframes wave {
+    0%, 40% { opacity: 0; transform: translate(0, 0) scale(.6); }
+    46% { opacity: .8; }
+    60% { opacity: 0; transform: translate(-8px, -10px) scale(1.3); }
+    100% { opacity: 0; }
+  }
+  .bat {
+    position: fixed; z-index: 0; width: 46px; opacity: .8;
+    animation: fly 18s linear infinite;
+  }
+  .bat svg { width: 100%; fill: #000; animation: flap .35s ease-in-out infinite alternate; transform-origin: center; }
+  .bat:nth-of-type(2) { top: 18vh; animation-duration: 22s; animation-delay: -4s; }
+  .bat:nth-of-type(3) { top: 32vh; width: 30px; animation-duration: 16s; animation-delay: -10s; }
+  .bat:nth-of-type(4) { top: 10vh; width: 36px; animation-duration: 26s; animation-delay: -15s; }
+  @keyframes fly {
+    0%   { transform: translate(-10vw, 0); }
+    25%  { transform: translate(25vw, -4vh); }
+    50%  { transform: translate(55vw, 3vh); }
+    75%  { transform: translate(85vw, -3vh); }
+    100% { transform: translate(115vw, 0); }
+  }
+  @keyframes flap { from { transform: scaleY(1); } to { transform: scaleY(.45); } }
+  .fog {
+    position: fixed; left: -50%; bottom: -10vh; width: 200%; height: 40vh; z-index: 0; pointer-events: none;
+    background: radial-gradient(ellipse at center, rgba(200, 180, 230, .12), transparent 60%);
+    animation: drift 30s ease-in-out infinite alternate;
+  }
+  @keyframes drift { from { transform: translateX(-10%); } to { transform: translateX(10%); } }
+
+  /* --- language toggle --- */
+  .lang {
+    position: fixed; top: 16px; right: 16px; z-index: 10;
+    display: flex; gap: 6px; padding: 6px;
+    background: rgba(20, 10, 32, .75); border: 1px solid rgba(255, 122, 26, .35);
+    border-radius: 999px; backdrop-filter: blur(6px);
+  }
+  .lang button {
+    display: flex; align-items: center; gap: 6px;
+    border: 0; border-radius: 999px; padding: 4px 12px 4px 4px; cursor: pointer;
+    font: 600 14px "Fredoka", sans-serif; letter-spacing: .05em;
+    color: var(--muted); background: transparent;
+    transition: background .25s, color .25s, transform .2s;
+  }
+  .lang button:hover { transform: translateY(-1px); color: var(--text); }
+  .lang button[aria-pressed="true"] { background: var(--orange); color: #1a0b00; }
+  .lang button svg { width: 34px; height: 34px; border-radius: 50%; background: #2b1840; flex: none; }
+  .lang button[aria-pressed="true"] svg { background: #3a1f55; }
+
+  /* --- layout --- */
+  main {
+    position: relative; z-index: 1;
+    max-width: 920px; margin: 0 auto; padding: 96px 16px 48px;
+    display: flex; flex-direction: column; gap: 28px;
+  }
+  .hero { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+  .eyebrow { color: var(--glow); letter-spacing: .3em; text-transform: uppercase; font-size: 18px; }
+  h1 {
+    font-family: "Creepster", cursive; font-weight: 400;
+    font-size: clamp(43px, 10vw, 104px); line-height: .95; color: var(--orange);
+    text-shadow: 0 0 18px rgba(255, 122, 26, .6), 0 4px 0 #3a1400;
+    animation: flicker 5s infinite;
+  }
+  /* two-line title: event name sized to fit one line, still larger than h2 */
+  h1 .h1-top, h1 .h1-big { display: block; white-space: nowrap; }
+  h1 .h1-top { font-size: clamp(22px, 6.6vw, 66px); }
+  h1 .h1-big { font-size: clamp(48px, 12vw, 110px); margin-top: .12em; }
+  @keyframes flicker {
+    0%, 92%, 100% { opacity: 1; }
+    93% { opacity: .4; } 94% { opacity: 1; } 96% { opacity: .6; } 97% { opacity: 1; }
+  }
+  .tagline { max-width: 640px; font-size: clamp(16px, 2.4vw, 20px); color: var(--muted); }
+  .banner {
+    width: 100%; height: auto; display: block; border-radius: 18px;
+    box-shadow: 0 0 0 2px rgba(255, 122, 26, .5), 0 0 50px rgba(255, 122, 26, .25), 0 30px 60px rgba(0, 0, 0, .6);
+  }
+
+  /* --- content cards --- */
+  section {
+    background: rgba(29, 15, 46, .78); border: 1px solid rgba(255, 122, 26, .3);
+    border-radius: 18px; padding: 28px clamp(18px, 4vw, 36px); backdrop-filter: blur(4px);
+  }
+  h2 {
+    font-family: "Creepster", cursive; font-weight: 400; letter-spacing: .04em;
+    font-size: clamp(21px, 5vw, 42px); color: var(--orange); margin-bottom: 14px;
+  }
+  h3 { font-size: 22px; font-weight: 600; color: var(--glow); margin: 22px 0 10px; }
+  section > h3:first-of-type { margin-top: 4px; }
+  p, li { font-size: 17px; line-height: 1.6; }
+  section p + p { margin-top: 10px; }
+  ul { padding-left: 22px; display: grid; gap: 6px; }
+  li::marker { color: var(--orange); }
+  .where {
+    margin-top: 16px; padding: 12px 16px; border-left: 4px solid var(--orange);
+    background: rgba(255, 122, 26, .1); border-radius: 0 10px 10px 0; font-weight: 600;
+  }
+  .callout {
+    margin: 18px 0; padding: 16px 20px; border-radius: 12px;
+    background: #000; box-shadow: -6px -6px 0 var(--orange);
+  }
+  .callout.yellow { box-shadow: -6px -6px 0 #f7c52b; }
+  .callout h4 { letter-spacing: .15em; font-size: 15px; margin-bottom: 8px; }
+  .callout a { color: var(--glow); }
+  .cta { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; margin-top: 8px; }
+  .btn {
+    display: inline-block; padding: 14px 26px; border-radius: 999px; text-decoration: none;
+    font: 600 18px "Fredoka", sans-serif; color: #1a0b00; background: #f7c52b;
+  }
+  .btn.orange { background: var(--orange); }
+  .btn[aria-disabled="true"] { opacity: .55; cursor: not-allowed; }
+  .btn small { font-weight: 400; margin-left: 6px; }
+  .note { color: var(--muted); }
+  .links li { word-break: break-word; }
+  .links a { color: var(--glow); }
+  /* --- footer: jack-o'-lanterns + graveyard silhouette --- */
+  footer { text-align: center; margin-top: 12px; }
+  .farewell { display: flex; align-items: center; justify-content: center; gap: clamp(8px, 2.25vw, 18px); }
+  .farewell span {
+    font-family: "Creepster", cursive; letter-spacing: .05em;
+    font-size: clamp(22px, 5.25vw, 42px); color: var(--orange);
+    text-shadow: 0 0 16px rgba(255, 122, 26, .55), 0 3px 0 #3a1400;
+  }
+  .jack { width: clamp(30px, 6.75vw, 48px); flex: none; animation: bob 3s ease-in-out infinite; overflow: visible; }
+  .jack:last-child { animation-delay: -1.5s; }
+  .jack .face { fill: #ffd84a; filter: drop-shadow(0 0 4px #ffb347); animation: candle 2.4s infinite; }
+  @keyframes bob { 0%, 100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-6px) rotate(4deg); } }
+  @keyframes candle { 0%, 100% { opacity: 1; } 20% { opacity: .75; } 23% { opacity: 1; } 60% { opacity: .85; } 63% { opacity: .6; } 66% { opacity: 1; } }
+  .home-link { margin-top: 12px; font-size: 15px; }
+  .home-link a { color: var(--muted); text-decoration: none; border-bottom: 1px solid rgba(185, 166, 209, .4); }
+  .home-link a:hover { color: var(--glow); border-color: var(--glow); }
+  .graveyard {
+    display: block; width: 75%; height: auto; margin: 14px auto 0; fill: #000;
+    background: radial-gradient(ellipse 65% 130% at 50% 100%, #ffd27a, var(--orange) 40%, rgba(255, 122, 26, .45) 65%, transparent 85%);    -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+  }
+
+  @media (max-width: 600px) {
+    .sky { top: 4px; left: 4px; transform: scale(.6); opacity: .75; }
+    .lang button { padding-right: 8px; }
+    .lang button svg { width: 28px; height: 28px; }
+    main { padding-top: 84px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition-duration: .01ms !important; }
+  }
+</style>
+</head>
+<body>
+  <div class="sky" aria-hidden="true">
+    <div class="moon"></div>
+    <div class="obat" style="--p:0;--dur:9s;--w:26px"><svg viewBox="0 0 64 28"><path d="M32 8c2-4 3-6 3-6l1 4c3-1 4 0 4 0s-2 3-2 5c6-6 18-8 26-4-6 1-9 6-9 6s-5-3-9 1c-3-2-7 0-7 3-3-2-5 1-7 5-2-4-4-7-7-5 0-3-4-5-7-3-4-4-9-1-9-1s-3-5-9-6c8-4 20-2 26 4 0-2-2-5-2-5s1-1 4 0l1-4s1 2 3 6z"/></svg></div>
+    <div class="obat" style="--p:0.33;--dur:9s;--w:22px"><svg viewBox="0 0 64 28"><path d="M32 8c2-4 3-6 3-6l1 4c3-1 4 0 4 0s-2 3-2 5c6-6 18-8 26-4-6 1-9 6-9 6s-5-3-9 1c-3-2-7 0-7 3-3-2-5 1-7 5-2-4-4-7-7-5 0-3-4-5-7-3-4-4-9-1-9-1s-3-5-9-6c8-4 20-2 26 4 0-2-2-5-2-5s1-1 4 0l1-4s1 2 3 6z"/></svg></div>
+    <div class="obat" style="--p:0.66;--dur:9s;--w:18px"><svg viewBox="0 0 64 28"><path d="M32 8c2-4 3-6 3-6l1 4c3-1 4 0 4 0s-2 3-2 5c6-6 18-8 26-4-6 1-9 6-9 6s-5-3-9 1c-3-2-7 0-7 3-3-2-5 1-7 5-2-4-4-7-7-5 0-3-4-5-7-3-4-4-9-1-9-1s-3-5-9-6c8-4 20-2 26 4 0-2-2-5-2-5s1-1 4 0l1-4s1 2 3 6z"/></svg></div>
+    <div class="obat wide rev" style="--p:0.1;--dur:14s;--w:30px"><svg viewBox="0 0 64 28"><path d="M32 8c2-4 3-6 3-6l1 4c3-1 4 0 4 0s-2 3-2 5c6-6 18-8 26-4-6 1-9 6-9 6s-5-3-9 1c-3-2-7 0-7 3-3-2-5 1-7 5-2-4-4-7-7-5 0-3-4-5-7-3-4-4-9-1-9-1s-3-5-9-6c8-4 20-2 26 4 0-2-2-5-2-5s1-1 4 0l1-4s1 2 3 6z"/></svg></div>
+    <div class="obat wide rev" style="--p:0.6;--dur:14s;--w:20px"><svg viewBox="0 0 64 28"><path d="M32 8c2-4 3-6 3-6l1 4c3-1 4 0 4 0s-2 3-2 5c6-6 18-8 26-4-6 1-9 6-9 6s-5-3-9 1c-3-2-7 0-7 3-3-2-5 1-7 5-2-4-4-7-7-5 0-3-4-5-7-3-4-4-9-1-9-1s-3-5-9-6c8-4 20-2 26 4 0-2-2-5-2-5s1-1 4 0l1-4s1 2 3 6z"/></svg></div>
+    <div class="obat wide" style="--p:0.4;--dur:11s;--w:16px"><svg viewBox="0 0 64 28"><path d="M32 8c2-4 3-6 3-6l1 4c3-1 4 0 4 0s-2 3-2 5c6-6 18-8 26-4-6 1-9 6-9 6s-5-3-9 1c-3-2-7 0-7 3-3-2-5 1-7 5-2-4-4-7-7-5 0-3-4-5-7-3-4-4-9-1-9-1s-3-5-9-6c8-4 20-2 26 4 0-2-2-5-2-5s1-1 4 0l1-4s1 2 3 6z"/></svg></div>
+    <svg class="wolf" viewBox="0 0 80 96">
+      <!-- rock -->
+      <path d="M0 96 L4 84 L14 79 L30 82 L44 76 L60 80 L72 78 L80 96 Z" fill="#05020a"/>
+      <!-- body: crouched biped, fur ruff, tail -->
+      <path fill="#000" d="M30 81 L33 70 L29 62 L31 52 L27 44 L30 36 L28 30 L33 31 L34 25 L38 29 L41 23 L44 28 L48 24 L50 30
+        L54 33 L52 40 L55 48 L52 56 L56 64 L66 66 L74 62 L70 70 L58 72 L50 70 L52 81 L46 81 L46 72 L42 70 L38 72 L36 81 Z"/>
+      <!-- arms with claws -->
+      <path fill="#000" d="M30 38 L22 48 L20 58 L16 62 L19 62 L18 66 L21 63 L22 66 L23 61 L25 50 L32 44 Z"/>
+      <path fill="#000" d="M50 36 L56 46 L58 55 L62 59 L59 59 L60 63 L57 60 L56 63 L55 58 L52 48 L47 42 Z"/>
+      <!-- head tipped back to howl -->
+      <g class="head">
+        <path fill="#000" d="M34 32 L35 21 L28 11 L27 8 L29 7 L38 13 L40 5 L44 12 L48 5 L49 15 L52 22 L53 32 Z"/>
+        <path class="jaw" fill="#000" d="M37 23 L29 13 L31 12 L39 20 Z"/>
+        <path class="wave" d="M22 0 q-4 -4 -2 -9"/>
+        <path class="wave" d="M18 2 q-7 -6 -3 -14"/>
+        <path class="wave" d="M14 4 q-10 -8 -4 -19"/>
+      </g>
+    </svg>
+  </div>
+  <div class="bat" aria-hidden="true"><svg viewBox="0 0 64 28"><path d="M32 8c2-4 3-6 3-6l1 4c3-1 4 0 4 0s-2 3-2 5c6-6 18-8 26-4-6 1-9 6-9 6s-5-3-9 1c-3-2-7 0-7 3-3-2-5 1-7 5-2-4-4-7-7-5 0-3-4-5-7-3-4-4-9-1-9-1s-3-5-9-6c8-4 20-2 26 4 0-2-2-5-2-5s1-1 4 0l1-4s1 2 3 6z"/></svg></div>
+  <div class="bat" aria-hidden="true"><svg viewBox="0 0 64 28"><path d="M32 8c2-4 3-6 3-6l1 4c3-1 4 0 4 0s-2 3-2 5c6-6 18-8 26-4-6 1-9 6-9 6s-5-3-9 1c-3-2-7 0-7 3-3-2-5 1-7 5-2-4-4-7-7-5 0-3-4-5-7-3-4-4-9-1-9-1s-3-5-9-6c8-4 20-2 26 4 0-2-2-5-2-5s1-1 4 0l1-4s1 2 3 6z"/></svg></div>
+  <div class="bat" aria-hidden="true"><svg viewBox="0 0 64 28"><path d="M32 8c2-4 3-6 3-6l1 4c3-1 4 0 4 0s-2 3-2 5c6-6 18-8 26-4-6 1-9 6-9 6s-5-3-9 1c-3-2-7 0-7 3-3-2-5 1-7 5-2-4-4-7-7-5 0-3-4-5-7-3-4-4-9-1-9-1s-3-5-9-6c8-4 20-2 26 4 0-2-2-5-2-5s1-1 4 0l1-4s1 2 3 6z"/></svg></div>
+  <div class="fog" aria-hidden="true"></div>
+
+  <nav class="lang" aria-label="Language">
+    <!-- EN: vampire boy -->
+    <button type="button" data-lang="en" aria-pressed="false" title="English">
+      <svg viewBox="0 0 40 40" aria-hidden="true">
+        <path d="M4 40c1-9 7-13 16-13s15 4 16 13z" fill="#7a0d1e"/>
+        <path d="M8 31l6 9h12l6-9-12 4z" fill="#111"/>
+        <circle cx="20" cy="19" r="9" fill="#e8e3f0"/>
+        <path d="M11 17c0-7 4-10 9-10s9 3 9 10l-3-3-3 4-3-5-3 5-3-4z" fill="#1a1024"/>
+        <circle cx="16.5" cy="19" r="1.4" fill="#c4122f"/><circle cx="23.5" cy="19" r="1.4" fill="#c4122f"/>
+        <path d="M16.5 23.5q3.5 2 7 0" stroke="#5a1020" stroke-width="1.2" fill="none"/>
+        <path d="M17.6 24l.7 2 .7-1.7M21 24.3l.7 1.7.7-2" fill="#fff"/>
+      </svg>
+      EN
+    </button>
+    <!-- FR: witch girl -->
+    <button type="button" data-lang="fr" aria-pressed="false" title="Français">
+      <svg viewBox="0 0 40 40" aria-hidden="true">
+        <path d="M5 40c1-8 7-12 15-12s14 4 15 12z" fill="#4b2a7a"/>
+        <path d="M10 18c-2 6-2 12 0 16h4v-14zM30 18c2 6 2 12 0 16h-4v-14z" fill="#ff7a1a"/>
+        <circle cx="20" cy="21" r="8.5" fill="#cdeccc"/>
+        <ellipse cx="20" cy="14" rx="15" ry="3" fill="#1a1024"/>
+        <path d="M13 14l6-12c1-1 3 0 3 1l5 11z" fill="#1a1024"/>
+        <rect x="13.5" y="11" width="13" height="2.2" fill="#ff7a1a"/>
+        <circle cx="17" cy="21" r="1.3" fill="#1a1024"/><circle cx="23" cy="21" r="1.3" fill="#1a1024"/>
+        <path d="M17 25q3 2.2 6 0" stroke="#1a1024" stroke-width="1.2" fill="none"/>
+        <circle cx="15" cy="23.6" r="1" fill="#f59ab0" opacity=".7"/><circle cx="25" cy="23.6" r="1" fill="#f59ab0" opacity=".7"/>
+      </svg>
+      FR
+    </button>
+  </nav>
+
+  <main>
+    <!-- Content mirrors https://douglas.research.mcgill.ca/halloween-at-the-douglas-2026 (source of truth).
+         Set SUBMIT_URL / GALLERY_URL in the script once the portals are live. -->
+
+    <div data-lang-block="en">
+      <header class="hero">
+        <p class="eyebrow">Halloween at the Douglas</p>
+        <h1><span class="h1-top">4th Annual Costume Competition</span> <span class="h1-big">COMING SOON!</span></h1>
+        <p class="tagline">For Douglas Research Centre Employees, Students &amp; PIs</p>
+        <img class="banner" src="images/en-1.webp" alt="Halloween at the Douglas — 4th annual costume competition" width="1672" height="941">
+      </header>
+    </div>
+    <div data-lang-block="fr">
+      <header class="hero">
+        <p class="eyebrow">Halloween au Douglas</p>
+        <h1><span class="h1-top">4e Concours annuel de costumes</span> <span class="h1-big">À SUIVRE !</span></h1>
+        <p class="tagline">Pour les employés, étudiants et chercheurs principaux du Centre de recherche Douglas</p>
+        <img class="banner" src="images/fr-1.webp" alt="Halloween au Douglas — 4e concours annuel de costumes" width="1672" height="941">
+      </header>
+    </div>
+
+    <section data-lang-block="en">
+      <h2>Come and see us!</h2>
+      <p>On October 30, 2026, we will be reprising our popular Halloween Costume Competition.</p>
+      <p>Come by the Research Centre administration wing in Perry 4th floor, between 12-3 PM to show us your costumes, take some photos on-site, and get some surprises!</p>
+      <p class="where">📍 Administration wing of the Research Centre, Perry 4th floor, from 12-3PM.</p>
+    </section>
+    <section data-lang-block="fr">
+      <h2>Venez nous voir!</h2>
+      <p>Le 30 octobre 2026, nous organisons à nouveau notre très populaire concours de déguisement d’Halloween !</p>
+      <p>Venez faire un tour pour nous montrer vos déguisements, prendre des photos sur place et avoir des surprises !</p>
+      <p class="where">📍 À l’administration du Centre de recherche, au 4e étage du Perry, entre 12-15h.</p>
+    </section>
+
+    <section data-lang-block="en">
+      <h2>Rules to participate in the costume contest</h2>
+      <h3>1. You have a costume</h3>
+      <p>You can participate in either the individual or group categories.</p>
+      <ul>
+        <li>Take a photo of yourself (solo or group).</li>
+        <li>Upload your photo using the button below.</li>
+      </ul>
+      <div class="callout">
+        <h4>REMINDERS:</h4>
+        <ul>
+          <li>Please use your judgement and common sense</li>
+          <li>Please choose respectful costumes<a href="#guidance-en">*</a></li>
+        </ul>
+      </div>
+      <div class="cta">
+        <a class="btn" data-link="submit" href="#">Submit your photos <small>(Coming soon)</small></a>
+        <p class="note">The portal will be open between 8AM-4PM on October 30.</p>
+      </div>
+
+      <h3>2. You want to vote</h3>
+      <ul>
+        <li>View the photo gallery using the link below.</li>
+        <li>Vote for your favourite costume in each category (individual or group).</li>
+        <li>Please use good sportsmanship when voting (one vote per person please)!</li>
+      </ul>
+      <div class="callout yellow">
+        <h4>DON’T FORGET:</h4>
+        <ul>
+          <li>Photos will be uploaded until 4PM on October 30.</li>
+          <li>We recommend that you wait until then to cast your vote!</li>
+        </ul>
+      </div>
+      <div class="cta">
+        <a class="btn orange" data-link="gallery" href="#">View Gallery and Vote <small>(Coming soon)</small></a>
+        <p class="note">The voting platform will close on November 3 at 4PM.</p>
+      </div>
+    </section>
+    <section data-lang-block="fr">
+      <h2>Règles pour participer au concours de déguisement</h2>
+      <h3>1. Vous avez un déguisement</h3>
+      <p>Vous pouvez participer dans la catégorie individuelle ou dans la catégorie de groupe.</p>
+      <ul>
+        <li>Prenez une photo de vous (solo ou en groupe).</li>
+        <li>Téléversez votre photo en utilisant le lien ci-dessous.</li>
+      </ul>
+      <div class="callout">
+        <h4>RAPPELS :</h4>
+        <ul>
+          <li>SVP utilisez votre jugement et bon sens</li>
+          <li>SVP choisissez des déguisements respectueux<a href="#guidance-fr">*</a></li>
+        </ul>
+      </div>
+      <div class="cta">
+        <a class="btn" data-link="submit" href="#">Soumettre vos photos <small>(À venir)</small></a>
+        <p class="note">Le portail sera ouvert de 8 h à 16 h le 30 octobre.</p>
+      </div>
+
+      <h3>2. Vous voulez voter</h3>
+      <ul>
+        <li>Consultez la galerie photo en utilisant le lien ci-dessous.</li>
+        <li>Votez pour votre costume préféré dans chacune des catégories (individuel ou en groupe).</li>
+        <li>Merci de faire preuve d’esprit sportif lors du vote (un vote par personne, s’il vous plaît !).</li>
+      </ul>
+      <div class="callout yellow">
+        <h4>N’OUBLIEZ PAS :</h4>
+        <ul>
+          <li>Les photos seront rajoutées jusqu’à 16 h le 30 octobre.</li>
+          <li>Nous vous recommandons d’attendre jusque-là pour voter !</li>
+        </ul>
+      </div>
+      <div class="cta">
+        <a class="btn orange" data-link="gallery" href="#">Voir la galerie et voter <small>(À venir)</small></a>
+        <p class="note">La plateforme de vote fermera le 3 novembre à 16 h.</p>
+      </div>
+    </section>
+
+    <section id="guidance-en" data-lang-block="en">
+      <h2>Not sure if your costume is appropriate?</h2>
+      <p>Please see below for a few links you can consult for guidance:</p>
+      <ul class="links">
+          <li><a href="https://humanrights.novascotia.ca/news-events/news/2024/avoiding-cultural-appropriation-and-discrimination-halloween" target="_blank" rel="noopener">https://humanrights.novascotia.ca/news-events/news/2024/avoiding-cultural-appropriation-and-discrimination-halloween</a></li>
+          <li><a href="https://csviamonde.ca/fileadmin/viamonde/Guide_Halloween_2019-2020.pdf" target="_blank" rel="noopener">https://csviamonde.ca/fileadmin/viamonde/Guide_Halloween_2019-2020.pdf</a></li>
+          <li><a href="https://equity.ubc.ca/resources/inclusive-halloween/" target="_blank" rel="noopener">https://equity.ubc.ca/resources/inclusive-halloween/</a></li>
+          <li><a href="https://www.cbc.ca/news/canada/prince-edward-island/pei-halloween-cultural-appropriation-costumes-1.5318769" target="_blank" rel="noopener">https://www.cbc.ca/news/canada/prince-edward-island/pei-halloween-cultural-appropriation-costumes-1.5318769</a></li>
+          <li><a href="https://ici.radio-canada.ca/nouvelle/1370382/halloween-fete-costume-choix-deguisement" target="_blank" rel="noopener">https://ici.radio-canada.ca/nouvelle/1370382/halloween-fete-costume-choix-deguisement</a></li>
+      </ul>
+    </section>
+    <section id="guidance-fr" data-lang-block="fr">
+      <h2>Pas sûrs si votre déguisement est approprié ?</h2>
+      <p>Veuillez consulter les liens ci-dessous pour référence :</p>
+      <ul class="links">
+          <li><a href="https://humanrights.novascotia.ca/news-events/news/2024/avoiding-cultural-appropriation-and-discrimination-halloween" target="_blank" rel="noopener">https://humanrights.novascotia.ca/news-events/news/2024/avoiding-cultural-appropriation-and-discrimination-halloween</a></li>
+          <li><a href="https://csviamonde.ca/fileadmin/viamonde/Guide_Halloween_2019-2020.pdf" target="_blank" rel="noopener">https://csviamonde.ca/fileadmin/viamonde/Guide_Halloween_2019-2020.pdf</a></li>
+          <li><a href="https://equity.ubc.ca/resources/inclusive-halloween/" target="_blank" rel="noopener">https://equity.ubc.ca/resources/inclusive-halloween/</a></li>
+          <li><a href="https://www.cbc.ca/news/canada/prince-edward-island/pei-halloween-cultural-appropriation-costumes-1.5318769" target="_blank" rel="noopener">https://www.cbc.ca/news/canada/prince-edward-island/pei-halloween-cultural-appropriation-costumes-1.5318769</a></li>
+          <li><a href="https://ici.radio-canada.ca/nouvelle/1370382/halloween-fete-costume-choix-deguisement" target="_blank" rel="noopener">https://ici.radio-canada.ca/nouvelle/1370382/halloween-fete-costume-choix-deguisement</a></li>
+      </ul>
+    </section>
+
+    <footer>
+      <div class="farewell">
+        <svg class="jack" viewBox="0 0 64 60" aria-hidden="true">
+          <path d="M30 10 q-1-7 5-10 l2 3 q-4 2-3 7z" fill="#3c6b2a"/>
+          <ellipse cx="20" cy="35" rx="16" ry="22" fill="#e8641a"/>
+          <ellipse cx="44" cy="35" rx="16" ry="22" fill="#e8641a"/>
+          <ellipse cx="32" cy="35" rx="15" ry="24" fill="#ff7a1a"/>
+          <path class="face" d="M17 28 l7-9 7 9z M33 28 l7-9 7 9z M29 37 l3-5 3 5z M14 41 q18 14 36 0 l-5 1 -2 4 -4-3 -4 4 -4-4 -4 4 -4-4 -4 3 -2-4z"/>
+        </svg>
+        <span data-i18n="footer"></span>
+        <svg class="jack" viewBox="0 0 64 60" aria-hidden="true">
+          <path d="M30 10 q-1-7 5-10 l2 3 q-4 2-3 7z" fill="#3c6b2a"/>
+          <ellipse cx="20" cy="35" rx="16" ry="22" fill="#e8641a"/>
+          <ellipse cx="44" cy="35" rx="16" ry="22" fill="#e8641a"/>
+          <ellipse cx="32" cy="35" rx="15" ry="24" fill="#ff7a1a"/>
+          <path class="face" d="M17 28 l7-9 7 9z M33 28 l7-9 7 9z M29 37 l3-5 3 5z M14 41 q18 14 36 0 l-5 1 -2 4 -4-3 -4 4 -4-4 -4 4 -4-4 -4 3 -2-4z"/>
+        </svg>
+      </div>
+      <svg class="graveyard" viewBox="0 0 900 70" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+        <path d="M0 70 V58 Q120 40 260 52 T520 48 T760 50 T900 46 V70Z"/>
+        <path d="M70 52 V30 a14 14 0 0 1 28 0 V50z M180 50 V22 h-8 v-6 h8 v-8 h6 v8 h8 v6 h-8 v28z M300 52 V34 a11 11 0 0 1 22 0 V52z
+          M600 50 V26 a16 16 0 0 1 32 0 V49z M700 50 V20 h-9 v-6 h9 v-9 h6 v9 h9 v6 h-9 v30z M820 48 V36 a10 10 0 0 1 20 0 V47z"/>
+        <path d="M400 50 V26 M430 50 V26 M460 50 V26 M490 50 V26 M390 32 H500 M390 42 H500" stroke="#000" stroke-width="3" fill="none"/>
+        <path d="M400 24 l-3 4 h6z M430 24 l-3 4 h6z M460 24 l-3 4 h6z M490 24 l-3 4 h6z"/>
+      </svg>
+      <p class="home-link">
+        <a data-lang-block="en" href="https://douglas.research.mcgill.ca/" target="_blank" rel="noopener">Douglas Research Centre ↗</a>
+        <a data-lang-block="fr" href="https://douglas.research.mcgill.ca/fr/" target="_blank" rel="noopener">Centre de recherche Douglas ↗</a>
+      </p>
+    </footer>
+  </main>
+
+<script>
+  // Fill these in when the portals open; buttons stay disabled while empty.
+  const SUBMIT_URL = "";
+  const GALLERY_URL = "";
+
+  const I18N = {
+    en: { pageTitle: "Halloween at the Douglas 2026", footer: "Happy Halloween!" },
+    fr: { pageTitle: "Halloween au Douglas 2026", footer: "Joyeuse Halloween !" }
+  };
+
+  function detectLang() {
+    const q = new URLSearchParams(location.search).get("lang");
+    if (q && I18N[q]) return q;
+    try {
+      const saved = localStorage.getItem("lang");
+      if (saved && I18N[saved]) return saved;
+    } catch (e) {}
+    const prefs = navigator.languages || [navigator.language || "en"];
+    for (const p of prefs) {
+      const code = (p || "").slice(0, 2).toLowerCase();
+      if (I18N[code]) return code;
+    }
+    return "en";
+  }
+
+  function setLang(lang, persist) {
+    const t = I18N[lang];
+    document.documentElement.lang = lang;
+    document.title = t.pageTitle;
+    document.querySelectorAll("[data-i18n]").forEach(el => el.textContent = t[el.dataset.i18n]);
+    document.querySelectorAll("[data-lang-block]").forEach(el => el.hidden = el.dataset.langBlock !== lang);
+    document.querySelectorAll(".lang button").forEach(b => b.setAttribute("aria-pressed", b.dataset.lang === lang));
+    if (persist) { try { localStorage.setItem("lang", lang); } catch (e) {} }
+  }
+
+  const URLS = { submit: SUBMIT_URL, gallery: GALLERY_URL };
+  document.querySelectorAll("[data-link]").forEach(a => {
+    const url = URLS[a.dataset.link];
+    if (url) {
+      a.href = url; a.target = "_blank"; a.rel = "noopener";
+      a.querySelector("small").remove();
+    } else {
+      a.setAttribute("aria-disabled", "true");
+      a.addEventListener("click", e => e.preventDefault());
+    }
+  });
+
+  document.querySelectorAll(".lang button").forEach(b =>
+    b.addEventListener("click", () => setLang(b.dataset.lang, true)));
+
+  setLang(detectLang(), false);
+</script>
+</body>
+</html>
