@@ -17,11 +17,10 @@ a { color:var(--glow); }
 header { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
 header a { color:var(--muted); }
 header form { display:flex; align-items:center; gap:4px; flex-wrap:wrap; }
-/* Creepster only on headings we write; names and emails stay in Fredoka for legibility. */
-h1, section > h2, .winners > h2 { font-family:"Creepster",cursive; font-weight:400; letter-spacing:.04em; }
+h1, h2, h3 { font-family:"Creepster",cursive; font-weight:400; letter-spacing:.04em; }
 h1, h2 { color:var(--accent); }
 h1 { font-size:clamp(2rem,9vw,2.8rem); line-height:1.05; margin:28px 0 12px; text-shadow:0 0 18px rgba(255,122,26,.6), 0 3px 0 #3a1400; }
-h3 { font-weight:600; color:var(--glow); }
+h3 { color:var(--glow); }
 .panel { background:var(--panel); border:1px solid var(--line); border-radius:18px; padding:20px clamp(16px,4vw,28px); margin:16px 0; backdrop-filter:blur(4px); }
 label { display:block; font-weight:600; margin-bottom:6px; }
 input, textarea, select { font-family:inherit; }
@@ -33,7 +32,7 @@ button:focus-visible, a:focus-visible { outline:2px solid var(--glow); outline-o
 button.link { background:none; box-shadow:none; color:var(--muted); text-decoration:underline; font-weight:400; font-size:1rem; padding:8px; width:auto; }
 .help { color:var(--muted); font-size:.9rem; margin:6px 0 0; }
 .error { color:var(--danger); font-weight:600; }
-h2 { font-size:1.3rem; font-weight:600; margin:8px 0 8px; }
+h2 { font-size:1.5rem; margin:8px 0 8px; }
 .winners > h2 { font-size:1.8rem; }
 label { margin-top:14px; }
 textarea { width:100%; font:inherit; padding:12px; border-radius:10px; border:1px solid var(--field-line); background:var(--field); color:var(--text); }
@@ -69,7 +68,7 @@ button.small { width:auto; margin:0; padding:4px 10px; font-size:.85rem; }
 .gallery { display:grid; gap:16px; }
 .card { background:var(--panel); border:1px solid var(--line); border-radius:18px; padding:12px; }
 .card img.cover { width:100%; max-height:70vh; object-fit:cover; border-radius:12px; display:block; }
-.card h3 { font-size:1.1rem; margin:12px 0 4px; }
+.card h3 { font-size:1.3rem; margin:12px 0 4px; }
 section > h2 { font-size:clamp(1.6rem,7vw,2.2rem); margin:32px 0 12px; }
 footer { color:var(--muted); font-size:.85rem; text-align:center; margin:40px 0 16px; }
 `;
