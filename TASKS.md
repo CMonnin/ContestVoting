@@ -25,6 +25,7 @@ Ordered by the critical path. The deliverability test gates everything else.
 - [ ] Send codes to real `@mcgill.ca`, `@mail.mcgill.ca`, `@douglas.mcgill.ca`, `@ssss.gouv.qc.ca` inboxes.
 - [ ] Record time-to-inbox and inbox vs junk; check DKIM/SPF/DMARC pass in the headers.
   - 10-22 `@ssss.gouv.qc.ca`: inbox, 50 s.
+  - 10-22 `@mail.mcgill.ca`: **Junk**. Auth is fine (ssss headers: spf/dkim/dmarc pass, SCL 1), so it's McGill's filter → ask McGill IT to allowlist the sender domain; junk hint added on the code screen.
 - [ ] Junked or > 2 min → ask Douglas IT to allowlist, or decide on the fallback (unverified email + audit).
 
 ## T3 — Entries + photos (by 10-24)
