@@ -74,6 +74,7 @@ export function layout(lang: Lang, user: User | null, body: Body): Body {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
 <title>${s.title}</title>
+<link href="/fonts/fonts.css" rel="stylesheet">
 <style>${CSS}</style>
 </head>
 <body>
