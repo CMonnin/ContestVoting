@@ -19,7 +19,6 @@ export type Config = {
   mailFrom: string;
   sessionSecret: string;
   dataDir: string;
-  contentDir: string;
   /** Where the organizers' landing page lives: index.html, landing.js, images/, fonts/. */
   siteDir: string;
   port: number;
@@ -107,7 +106,6 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     mailFrom: env.MAIL_FROM?.trim() || "Halloween DRC <noreply@halloween2026.douglasneuroinformatics.ca>",
     sessionSecret,
     dataDir: env.DATA_DIR?.trim() || "./data",
-    contentDir: env.CONTENT_DIR?.trim() || "./content",
     siteDir: env.SITE_DIR?.trim() || fileURLToPath(new URL("..", import.meta.url)),
     port: Number(env.PORT ?? 3000),
     trustProxy: env.TRUST_PROXY === "1",

@@ -34,8 +34,7 @@ const strings = {
     otherEmail: "Utiliser un autre courriel",
     resend: "Renvoyer le code",
     haveCode: "J'ai déjà un code",
-    landingLead: "Le vote et les inscriptions ouvrent le",
-    rules: "Règlements",
+    home: "Accueil et règlements",
     gallery: "Galerie et vote",
     phaseOpen: "Inscriptions et vote ouverts !",
     phaseVoting: "Inscriptions fermées — le vote continue.",
@@ -120,8 +119,7 @@ const strings = {
     otherEmail: "Use a different email",
     resend: "Resend code",
     haveCode: "I already have a code",
-    landingLead: "Submissions and voting open on",
-    rules: "Rules",
+    home: "Home & rules",
     gallery: "Gallery & vote",
     phaseOpen: "Submissions and voting are open!",
     phaseVoting: "Submissions closed — voting continues.",
@@ -197,15 +195,4 @@ export const t = (lang: Lang): Strings => strings[lang];
 
 export function errorText(lang: Lang, key: ErrorKey, vars: Record<string, string | number> = {}): string {
   return strings[lang].err[key].replace(/\{(\w+)\}/g, (_, k) => String(vars[k] ?? ""));
-}
-
-export function formatDateTime(d: Date, lang: Lang, tz: string): string {
-  return new Intl.DateTimeFormat(lang === "fr" ? "fr-CA" : "en-CA", {
-    timeZone: tz,
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    hour: "numeric",
-    minute: "2-digit",
-  }).format(d);
 }

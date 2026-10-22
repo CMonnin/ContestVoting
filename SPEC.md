@@ -13,7 +13,7 @@ One URL (the poster QR code) serves every phase. The phase is computed from the 
 
 | Phase | When | Public sees |
 |---|---|---|
-| `landing` | until 10-30 08:00 | Rules, how it works, opening date. No login. |
+| `landing` | until 10-30 08:00 | Organizers' landing page (`index.html`), buttons "coming soon". No login. |
 | `open` | 10-30 08:00 – 16:00 | Gallery + vote; submit / edit / withdraw own entry |
 | `voting` | 10-30 16:00 – 11-03 16:00 | Gallery + vote; submissions closed |
 | `closed` | 11-03 16:00 → results published | Gallery, "voting closed, results soon" |
@@ -90,7 +90,7 @@ Times live in config (`.env`), not code.
 
 - FR + EN for all UI, emails, rules.
 - Language from `Accept-Language`, French fallback; toggle stored in a cookie.
-- Rules text supplied by the DRC organizers (FR + EN) by 10-24, stored as Markdown files in the repo.
+- Landing page and rules are the organizers' own `index.html` (FR + EN), served at `/` in every phase; the app switches its Submit / Gallery buttons on per phase.
 
 ## 10. Branding
 

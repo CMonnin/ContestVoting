@@ -26,7 +26,7 @@ test("happy path: code by email, verify, session cookie, logged-in page", async 
   const home = await ctx.app.request("https://halloween.test/gallery", { headers: { cookie: `sid=${sid}` } });
   const page = await home.text();
   assert.match(page, /alice@mcgill\.ca/);
-  for (const href of ["/gallery", "/me/entry", "/rules"]) assert.match(page, new RegExp(`<nav class="main">[\\s\\S]*href="${href}"`));
+  for (const href of ["/", "/gallery", "/me/entry"]) assert.match(page, new RegExp(`<nav class="main">[\\s\\S]*href="${href}"`));
   assert.doesNotMatch(page, /href="\/admin"/, "admin link only for admins");
 });
 

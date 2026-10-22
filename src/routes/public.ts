@@ -3,11 +3,10 @@ import { join } from "node:path";
 import { serveStatic } from "@hono/node-server/serve-static";
 import { setCookie } from "hono/cookie";
 import { getResults } from "../admin.ts";
-import { loadRules } from "../content.ts";
 import { listApproved } from "../entries.ts";
-import { errorText, formatDateTime, t } from "../i18n.ts";
+import { errorText, t } from "../i18n.ts";
 import { seededShuffle } from "../shuffle.ts";
-import { homePage, landingPage, rulesPage } from "../views.ts";
+import { homePage } from "../views.ts";
 import { castVote, myVotes, votingOpen } from "../votes.ts";
 import { LANG_COOKIE, YEAR_S, type App, type RouteCtx } from "./context.ts";
 
@@ -27,13 +26,7 @@ export function publicRoutes(app: App, { deps, cookieOpts, phaseNow, render }: R
   app.get("/", async (c) => {
     const lang = c.get("lang");
     const phase = phaseNow();
-    let page: string;
-    try {
-      page = await readFile(join(cfg.siteDir, "index.html"), "utf8");
-    } catch {
-      if (phase !== "landing") return c.redirect("/gallery");
-      return render(c, landingPage(lang, formatDateTime(cfg.openAt, lang, cfg.tz), loadRules(cfg.contentDir, lang)));
-    }
+    const page = await readFile(join(cfg.siteDir, "index.html"), "utf8");
     const state: Record<string, string> = { lang };
     if (phase !== "landing") {
       state.submit = phase === "open" ? "/me/entry" : "closed";
@@ -86,6 +79,4 @@ export function publicRoutes(app: App, { deps, cookieOpts, phaseNow, render }: R
     });
     return c.redirect(res.ok ? `/gallery?voted=1#e${entryId}` : `/gallery?e=${res.reason}`);
   });
-
-  app.get("/rules", (c) => render(c, rulesPage(c.get("lang"), loadRules(cfg.contentDir, c.get("lang")))));
 }

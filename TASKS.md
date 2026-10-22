@@ -48,7 +48,7 @@ Ordered by the critical path. The deliverability test gates everything else.
 
 ## T5 — Public pages (by 10-26)
 
-- [x] Landing: rules from `content/rules.{fr,en}.md` (placeholder text until the organizers send theirs), opening date. No countdown (would need JS; the date is enough).
+- [x] Landing: the organizers' `index.html` at `/` (self-hosted fonts, script in `landing.js`); buttons follow the phase.
 - [ ] Landing: contact for photo removal requests (needs an address from the organizers).
 - [x] Gallery: approved entries, per-viewer seeded shuffle, tap a photo to open it full size, vote / change vote.
 - [x] Closed + results views (results banner with snapshotted counts).
