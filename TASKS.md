@@ -69,10 +69,10 @@ Ordered by the critical path. The deliverability test gates everything else.
 ## T7 — Contest day (10-30)
 
 - [ ] Verify the phase override is cleared; clock-driven phases correct.
-- [ ] On call 08:00–16:00; watch logs and the admin queue.
-- [ ] After 16:00: admins resolve ties, publish results.
+- [ ] On call 08:00–16:00 (submissions); watch logs and the admin queue.
+- [ ] Voting runs until 11-03 16:00; then admins resolve ties, publish results.
 
-## T8 — After (by 11-29)
+## T8 — After (by 12-03, 30 days after voting closes)
 
 - [ ] Export winners' photos if the DRC wants them.
 - [ ] Purge DB + photos; stop the container; remove DNS records.

@@ -3,7 +3,7 @@
 Spec, settled 2026-10-20. Brought to you by the DNP.
 
 - URL: `https://halloween2026.douglasneuroinformatics.ca/`
-- Contest: Friday 2026-10-30, times in `America/Montreal`
+- Contest: submissions Friday 2026-10-30 08:00–16:00, voting until Tuesday 2026-11-03 16:00, times in `America/Montreal` (as announced on the organizers' landing page)
 - Scale: < 100 voters, < 100 entries
 - Replaces woobox (cost, US-hosted)
 
@@ -14,9 +14,9 @@ One URL (the poster QR code) serves every phase. The phase is computed from the 
 | Phase | When | Public sees |
 |---|---|---|
 | `landing` | until 10-30 08:00 | Rules, how it works, opening date. No login. |
-| `open` | 08:00 – 14:00 | Gallery + vote; submit / edit / withdraw own entry |
-| `voting` | 14:00 – 16:00 | Gallery + vote; submissions closed |
-| `closed` | 16:00 → results published | Gallery, "voting closed, results soon" |
+| `open` | 10-30 08:00 – 16:00 | Gallery + vote; submit / edit / withdraw own entry |
+| `voting` | 10-30 16:00 – 11-03 16:00 | Gallery + vote; submissions closed |
+| `closed` | 11-03 16:00 → results published | Gallery, "voting closed, results soon" |
 | `results` | admin clicks Publish | Top-3 banner with counts, gallery |
 
 Times live in config (`.env`), not code.
@@ -28,7 +28,7 @@ Times live in config (`.env`), not code.
 - Normalise email: trim, lowercase. Compare the exact domain (no subdomain wildcard unless listed).
 - Code: 6 digits, random from the CSPRNG, stored hashed, valid 10 min, max 5 wrong attempts (then invalidated), resend cooldown 60 s, max 5 sends per email per hour, and an IP cap (soft: log + flag, since DRC wifi is a shared NAT).
 - Code only, no magic links: M365 Safe Links pre-clicks links.
-- Session: random token in an `HttpOnly; Secure; SameSite=Lax` cookie, hashed in the DB, expires 10-30 23:59.
+- Session: random token in an `HttpOnly; Secure; SameSite=Lax` cookie, hashed in the DB, expires 11-03 23:59.
 - Login only opens at the start of `open`. Admins can log in during any phase.
 - The email says which code is for which site, in FR + EN, so it isn't mistaken for phishing.
 
@@ -111,9 +111,9 @@ Times live in config (`.env`), not code.
 BASE_URL=https://halloween2026.douglasneuroinformatics.ca
 TZ=America/Montreal
 OPEN_AT=2026-10-30T08:00
-SUBMIT_CLOSE_AT=2026-10-30T14:00
-VOTE_CLOSE_AT=2026-10-30T16:00
-SESSION_END_AT=2026-10-30T23:59
+SUBMIT_CLOSE_AT=2026-10-30T16:00
+VOTE_CLOSE_AT=2026-11-03T16:00
+SESSION_END_AT=2026-11-03T23:59
 ALLOWED_DOMAINS=mcgill.ca,mail.mcgill.ca,douglas.mcgill.ca,ssss.gouv.qc.ca
 ADMIN_EMAILS=a@...,b@...,c@...,d@...
 SMTP_HOST=smtp.tem.scaleway.com
