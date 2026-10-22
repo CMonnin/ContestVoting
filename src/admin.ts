@@ -1,6 +1,6 @@
 import type { AuthDeps } from "./auth.ts";
 import { getSetting, setSetting, type Db } from "./db.ts";
-import type { Category, EntryStatus } from "./entries.ts";
+import { CATEGORIES, type Category, type EntryStatus } from "./entries.ts";
 import { adminAlertEmail, rejectionEmail } from "./mail.ts";
 
 export const REASON_MAX = 200;
@@ -182,38 +182,52 @@ export function voidVote(deps: AuthDeps, admin: string, voterEmail: string, cate
 
 export type Ranked = { id: number; name: string; votes: number; tied: boolean };
 
-/** Approved entries by votes; `tied` marks entries sharing a count with a neighbour. */
-export function ranking(db: Db): Ranked[] {
+/** Approved entries of one category by votes; `tied` marks entries sharing a count with a neighbour. */
+export function ranking(db: Db, category: Category): Ranked[] {
   const rows = db
     .prepare(
       `SELECT e.id, e.name, COUNT(v.voter_email) AS votes
          FROM entries e LEFT JOIN votes v ON v.entry_id = e.id
-        WHERE e.status = 'approved'
+        WHERE e.status = 'approved' AND e.category = ?
         GROUP BY e.id ORDER BY votes DESC, e.id ASC`,
     )
-    .all() as { id: number; name: string; votes: number }[];
+    .all(category) as { id: number; name: string; votes: number }[];
   return rows.map((r, i) => ({
     ...r,
     tied: rows[i - 1]?.votes === r.votes || rows[i + 1]?.votes === r.votes,
   }));
 }
 
-export type Results = { place: number; id: number; name: string; votes: number }[];
+export type Rankings = Record<Category, Ranked[]>;
+
+export const rankings = (db: Db): Rankings =>
+  Object.fromEntries(CATEGORIES.map((c) => [c, ranking(db, c)])) as Rankings;
+
+export type Results = { category: Category; place: number; id: number; name: string; votes: number }[];
 
 export function getResults(db: Db): Results | null {
   const raw = getSetting(db, "results_json");
   return raw ? (JSON.parse(raw) as Results) : null;
 }
 
-/** Admins pick the final order (that is how ties are broken); counts are snapshotted. */
-export function publishResults(deps: AuthDeps, admin: string, ids: number[]): "ok" | "invalid" {
-  const ranked = ranking(deps.db);
-  const picked = ids.map((id) => ranked.find((r) => r.id === id));
-  if (picked.length === 0 || picked.some((p) => !p) || new Set(ids).size !== ids.length) return "invalid";
-  const results: Results = picked.map((p, i) => ({ place: i + 1, id: p!.id, name: p!.name, votes: p!.votes }));
+/**
+ * Admins pick the final order per category (that is how ties are broken); counts are
+ * snapshotted. Every picked id must be an approved entry of that category, without repeats.
+ */
+export function publishResults(deps: AuthDeps, admin: string, picks: Record<Category, number[]>): "ok" | "invalid" {
+  const results: Results = [];
+  for (const category of CATEGORIES) {
+    const ids = picks[category];
+    const ranked = ranking(deps.db, category);
+    const picked = ids.map((id) => ranked.find((r) => r.id === id));
+    if (picked.some((p) => !p) || new Set(ids).size !== ids.length) return "invalid";
+    picked.forEach((p, i) => results.push({ category, place: i + 1, id: p!.id, name: p!.name, votes: p!.votes }));
+  }
+  if (results.length === 0) return "invalid";
   setSetting(deps.db, "results_json", JSON.stringify(results));
   setSetting(deps.db, "results_published", "1");
-  logAdmin(deps.db, admin, "publish_results", null, results.map((r) => `${r.place}. ${r.name} (${r.votes})`).join("; "), deps.now().getTime());
+  const detail = results.map((r) => `${r.category} ${r.place}. ${r.name} (${r.votes})`).join("; ");
+  logAdmin(deps.db, admin, "publish_results", null, detail, deps.now().getTime());
   return "ok";
 }
 

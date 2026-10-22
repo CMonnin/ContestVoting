@@ -143,9 +143,14 @@ ${opts.error ? html`<p class="error" role="alert">${opts.error}</p>` : ""}
 ${opts.results
     ? html`<div class="panel winners">
   <h2>${s.winners}</h2>
-  <ol>${opts.results.map(
-    (r) => html`<li><a href="#e${r.id}">${r.name}</a> — ${s.votesCount.replace("{n}", String(r.votes))}</li>`,
-  )}</ol>
+  ${CATEGORIES.map((c) => {
+    const inCat = opts.results!.filter((r) => r.category === c);
+    return inCat.length
+      ? html`<h3>${s.categories[c]}</h3><ol>${inCat.map(
+          (r) => html`<li><a href="#e${r.id}">${r.name}</a> — ${s.votesCount.replace("{n}", String(r.votes))}</li>`,
+        )}</ol>`
+      : "";
+  })}
 </div>`
     : ""}
 <div class="panel">

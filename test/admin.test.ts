@@ -104,24 +104,27 @@ test("vote audit flags shared devices and IP bursts; void removes a vote", async
   assert.ok(!voteAudit(ctx.db).some((v) => v.voterEmail === "b@mcgill.ca"));
 });
 
-test("ranking counts only approved entries and marks ties", () => {
+test("ranking is per category, counts only approved entries and marks ties", () => {
   const ctx = setup();
   const a = addEntry(ctx, "a@mcgill.ca", "A", "approved").id;
   const b = addEntry(ctx, "b@mcgill.ca", "B", "approved").id;
   const c = addEntry(ctx, "c@mcgill.ca", "C", "approved").id;
+  const g = addEntry(ctx, "g@mcgill.ca", "G", "approved", "group").id;
   addEntry(ctx, "d@mcgill.ca", "D pending");
   addVote(ctx, "1@mcgill.ca", a);
   addVote(ctx, "2@mcgill.ca", a);
   addVote(ctx, "3@mcgill.ca", b);
   addVote(ctx, "4@mcgill.ca", c);
+  addVote(ctx, "1@mcgill.ca", g);
   assert.deepEqual(
-    ranking(ctx.db).map((r) => [r.name, r.votes, r.tied]),
+    ranking(ctx.db, "individual").map((r) => [r.name, r.votes, r.tied]),
     [
       ["A", 2, false],
       ["B", 1, true],
       ["C", 1, true],
     ],
   );
+  assert.deepEqual(ranking(ctx.db, "group").map((r) => [r.name, r.votes]), [["G", 1]]);
 });
 
 test("publish: refused while voting, then admins pick the order; phase becomes results; unpublish reverts", async () => {
@@ -129,19 +132,31 @@ test("publish: refused while voting, then admins pick the order; phase becomes r
   const admin = await login(ctx, ADMIN);
   const a = addEntry(ctx, "a@mcgill.ca", "A", "approved").id;
   const b = addEntry(ctx, "b@mcgill.ca", "B", "approved").id;
+  const g = addEntry(ctx, "g@mcgill.ca", "G", "approved", "group").id;
   addVote(ctx, "1@mcgill.ca", a);
   addVote(ctx, "2@mcgill.ca", b);
+  addVote(ctx, "1@mcgill.ca", g);
+  const publish = (fields: Record<string, string>) => adminPost(ctx, admin, "/admin/results/publish", fields, "/admin/settings");
 
-  const early = await adminPost(ctx, admin, "/admin/results/publish", { place1: String(a) }, "/admin/settings");
+  const early = await publish({ individual1: String(a) });
   assert.equal(early.headers.get("location"), "/admin/settings?e=voting_open");
 
   ctx.clock.now = new Date("2026-10-30T20:30:00Z"); // 16:30 → closed
-  const dup = await adminPost(ctx, admin, "/admin/results/publish", { place1: String(a), place2: String(a) }, "/admin/settings");
-  assert.equal(dup.headers.get("location"), "/admin/settings?e=invalid_results");
+  const bads: Record<string, string>[] = [{ individual1: String(a), individual2: String(a) }, { group1: String(a) }, {}];
+  for (const bad of bads) {
+    assert.equal((await publish(bad)).headers.get("location"), "/admin/settings?e=invalid_results", JSON.stringify(bad));
+  }
 
-  // Tie 1–1: admins put B first.
-  await adminPost(ctx, admin, "/admin/results/publish", { place1: String(b), place2: String(a), place3: "" }, "/admin/settings");
-  assert.deepEqual(JSON.parse(getSetting(ctx.db, "results_json")!).map((r: { name: string }) => r.name), ["B", "A"]);
+  // Tie 1–1 in individual: admins put B first.
+  await publish({ individual1: String(b), individual2: String(a), individual3: "", group1: String(g) });
+  assert.deepEqual(
+    JSON.parse(getSetting(ctx.db, "results_json")!).map((r: { category: string; place: number; name: string }) => [r.category, r.place, r.name]),
+    [
+      ["individual", 1, "B"],
+      ["individual", 2, "A"],
+      ["group", 1, "G"],
+    ],
+  );
   assert.equal((await (await get(ctx, "/healthz")).json()).phase, "results");
 
   await adminPost(ctx, admin, "/admin/results/unpublish", {}, "/admin/settings");

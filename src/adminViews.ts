@@ -1,7 +1,8 @@
 import { html } from "hono/html";
 import type { HtmlEscapedString } from "hono/utils/html";
-import type { AdminEntry, AuditVote, LogRow, Ranked, Results } from "./admin.ts";
+import type { AdminEntry, AuditVote, LogRow, Ranked, Rankings, Results } from "./admin.ts";
 import { fill, ta, type AdminError, type AdminNotice } from "./adminI18n.ts";
+import { CATEGORIES, type Category } from "./entries.ts";
 import { t, type Lang } from "./i18n.ts";
 import { PHASES, type Phase } from "./phase.ts";
 
@@ -75,9 +76,10 @@ export function entriesPage(lang: Lang, entries: AdminEntry[], flash: Flash): Bo
   );
 }
 
-function rankingTable(lang: Lang, ranked: Ranked[]): Body {
+function rankingTable(lang: Lang, category: Category, ranked: Ranked[]): Body {
   const a = ta(lang);
-  return html`<table>
+  return html`<h3>${t(lang).categories[category]}</h3>
+<table>
   <tr><th>#</th><th>${a.entry}</th><th>${a.votes}</th></tr>
   ${ranked.map(
     (r, i) => html`<tr><td>${i + 1}</td><td>${r.name}${r.tied ? html` <span class="flag">${a.tied}</span>` : ""}</td><td>${r.votes}</td></tr>`,
@@ -85,13 +87,15 @@ function rankingTable(lang: Lang, ranked: Ranked[]): Body {
 </table>`;
 }
 
-export function votesPage(lang: Lang, ranked: Ranked[], votes: AuditVote[], flash: Flash, fmt: (ms: number) => string): Body {
+const rankingTables = (lang: Lang, ranked: Rankings) => CATEGORIES.map((c) => rankingTable(lang, c, ranked[c]));
+
+export function votesPage(lang: Lang, ranked: Rankings, votes: AuditVote[], flash: Flash, fmt: (ms: number) => string): Body {
   const a = ta(lang);
   return frame(
     lang,
     "votes",
     flash,
-    html`<div class="panel"><h2>${a.ranking}</h2>${rankingTable(lang, ranked)}</div>
+    html`<div class="panel"><h2>${a.ranking}</h2>${rankingTables(lang, ranked)}</div>
 <div class="panel">
   <p class="help">${a.flagsHelp}</p>
   ${votes.length === 0
@@ -119,7 +123,7 @@ export function settingsPage(
     override: string | null;
     baseDomains: string[];
     extraDomains: string;
-    ranked: Ranked[];
+    ranked: Rankings;
     results: Results | null;
     published: boolean;
     canPublish: boolean;
@@ -129,14 +133,14 @@ export function settingsPage(
   fmt: (ms: number) => string,
 ): Body {
   const a = ta(lang);
-  const top = d.ranked.slice(0, 3);
-  const select = (place: number) => html`<label for="p${place}">${fill(a.place, { n: place })}</label>
-<select id="p${place}" name="place${place}">
+  const select = (c: Category, place: number) => html`<label for="${c}${place}">${fill(a.place, { n: place })}</label>
+<select id="${c}${place}" name="${c}${place}">
   <option value=""></option>
-  ${d.ranked.map(
-    (r) => html`<option value="${r.id}" ${top[place - 1]?.id === r.id ? "selected" : ""}>${r.name} (${r.votes})</option>`,
+  ${d.ranked[c].map(
+    (r) => html`<option value="${r.id}" ${d.ranked[c][place - 1]?.id === r.id ? "selected" : ""}>${r.name} (${r.votes})</option>`,
   )}
 </select>`;
+  const anyRanked = CATEGORIES.some((c) => d.ranked[c].length > 0);
   return frame(
     lang,
     "settings",
@@ -158,14 +162,16 @@ export function settingsPage(
 </form>
 <div class="panel">
   <h2>${a.ranking}</h2>
-  ${rankingTable(lang, d.ranked)}
+  ${rankingTables(lang, d.ranked)}
   ${d.published && d.results
-    ? html`<p>${a.published}</p><ol>${d.results.map((r) => html`<li>${r.name} (${r.votes})</li>`)}</ol>
+    ? html`<p>${a.published}</p>${CATEGORIES.map(
+        (c) => html`<h3>${t(lang).categories[c]}</h3><ol>${d.results!.filter((r) => r.category === c).map((r) => html`<li>${r.name} (${r.votes})</li>`)}</ol>`,
+      )}
       <form method="post" action="/admin/results/unpublish"><button class="danger" type="submit">${a.unpublish}</button></form>`
-    : d.canPublish && d.ranked.length > 0
+    : d.canPublish && anyRanked
       ? html`<form method="post" action="/admin/results/publish">
       <p class="help">${a.publishHelp}</p>
-      ${select(1)} ${select(2)} ${select(3)}
+      ${CATEGORIES.map((c) => html`<h3>${t(lang).categories[c]}</h3>${select(c, 1)} ${select(c, 2)} ${select(c, 3)}`)}
       <button type="submit">${a.publish}</button>
     </form>`
       : ""}

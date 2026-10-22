@@ -17,7 +17,7 @@ One URL (the poster QR code) serves every phase. The phase is computed from the 
 | `open` | 10-30 08:00 – 16:00 | Gallery + vote; submit / edit / withdraw own entry |
 | `voting` | 10-30 16:00 – 11-03 16:00 | Gallery + vote; submissions closed |
 | `closed` | 11-03 16:00 → results published | Gallery, "voting closed, results soon" |
-| `results` | admin clicks Publish | Top-3 banner with counts, gallery |
+| `results` | admin clicks Publish | Top-3 per category banner with counts, gallery |
 
 Times live in config (`.env`), not code.
 

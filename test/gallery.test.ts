@@ -99,10 +99,19 @@ test("voting refused after close and for unapproved entries; counts never shown 
 test("results banner appears only once published", async () => {
   const ctx = setup("2026-10-30T20:30:00Z"); // closed
   const a = addEntry(ctx, "a@mcgill.ca", "Pumpkin King", "approved").id;
-  setSetting(ctx.db, "results_json", JSON.stringify([{ place: 1, id: a, name: "Pumpkin King", votes: 7 }]));
+  const g = addEntry(ctx, "g@mcgill.ca", "Ghost Crew", "approved", "group").id;
+  setSetting(
+    ctx.db,
+    "results_json",
+    JSON.stringify([
+      { category: "individual", place: 1, id: a, name: "Pumpkin King", votes: 7 },
+      { category: "group", place: 1, id: g, name: "Ghost Crew", votes: 4 },
+    ]),
+  );
   assert.doesNotMatch(await home(ctx), /class="panel winners"/);
   setSetting(ctx.db, "results_published", "1");
   const page = await home(ctx);
   assert.match(page, /class="panel winners"/);
-  assert.match(page, new RegExp(`href="#e${a}">Pumpkin King</a> — 7 vote`));
+  assert.match(page, new RegExp(`(Individual|Individuel)</h3><ol><li><a href="#e${a}">Pumpkin King</a> — 7 vote`));
+  assert.match(page, new RegExp(`(Group|Groupe)</h3><ol><li><a href="#e${g}">Ghost Crew</a> — 4 vote`));
 });

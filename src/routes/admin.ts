@@ -5,7 +5,7 @@ import {
   listEntries,
   logAdmin,
   publishResults,
-  ranking,
+  rankings,
   recentLog,
   rejectEntry,
   setExtraDomains,
@@ -16,7 +16,7 @@ import {
 import { ta, type AdminError, type AdminNotice } from "../adminI18n.ts";
 import { entriesPage, queuePage, settingsPage, votesPage, type Flash } from "../adminViews.ts";
 import { getSetting, setSetting } from "../db.ts";
-import { deleteEntry } from "../entries.ts";
+import { CATEGORIES, deleteEntry, type Category } from "../entries.ts";
 import type { Lang } from "../i18n.ts";
 import { isPhase } from "../phase.ts";
 import { deletePhotoFiles } from "../photos.ts";
@@ -92,7 +92,7 @@ export function adminRoutes(app: App, { deps, photosDir, phaseNow, render }: Rou
   });
 
   app.get("/admin/votes", (c) =>
-    render(c, votesPage(c.get("lang"), ranking(db), voteAudit(db), flashOf(c), fmtTime(c.get("lang")))),
+    render(c, votesPage(c.get("lang"), rankings(db), voteAudit(db), flashOf(c), fmtTime(c.get("lang")))),
   );
 
   app.post("/admin/votes/void", async (c) => {
@@ -112,7 +112,7 @@ export function adminRoutes(app: App, { deps, photosDir, phaseNow, render }: Rou
           override: getSetting(db, "phase_override"),
           baseDomains: cfg.allowedDomains,
           extraDomains: getSetting(db, "extra_domains") ?? "",
-          ranked: ranking(db),
+          ranked: rankings(db),
           results: getResults(db),
           published: getSetting(db, "results_published") === "1",
           canPublish: phase === "closed" || phase === "results",
@@ -143,8 +143,13 @@ export function adminRoutes(app: App, { deps, photosDir, phaseNow, render }: Rou
     const phase = phaseNow();
     if (phase !== "closed" && phase !== "results") return back(c, { e: "voting_open" }, "/admin/settings");
     const form = await c.req.parseBody();
-    const ids = [form.place1, form.place2, form.place3].map((v) => String(v ?? "")).filter(Boolean).map(Number);
-    const res = publishResults(deps, admin(c), ids);
+    const picks = Object.fromEntries(
+      CATEGORIES.map((cat) => [
+        cat,
+        [1, 2, 3].map((n) => String(form[`${cat}${n}`] ?? "")).filter(Boolean).map(Number),
+      ]),
+    ) as Record<Category, number[]>;
+    const res = publishResults(deps, admin(c), picks);
     return back(c, res === "ok" ? { n: "published" } : { e: "invalid_results" }, "/admin/settings");
   });
 
