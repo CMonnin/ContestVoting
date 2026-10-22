@@ -28,7 +28,7 @@ test("gallery stays hidden during landing", async () => {
 test("order is stable per viewer and differs across viewers", async () => {
   const ctx = setup();
   for (let i = 0; i < 12; i++) addEntry(ctx, `p${i}@mcgill.ca`, `Costume-${i}`, "approved");
-  const order = (page: string) => [...page.matchAll(/<h2>(Costume-\d+)<\/h2>/g)].map((m) => m[1]);
+  const order = (page: string) => [...page.matchAll(/<h3>(Costume-\d+)<\/h3>/g)].map((m) => m[1]);
   const a1 = order(await home(ctx, "did=viewer-aaaaaaaaaaaaaaaa"));
   const a2 = order(await home(ctx, "did=viewer-aaaaaaaaaaaaaaaa"));
   assert.equal(a1.length, 12);
@@ -65,6 +65,19 @@ test("vote flow: anonymous is sent to login; vote, see it marked, change it", as
   assert.equal(audit.length, 1);
   assert.equal(audit[0].entryId, b);
   assert.ok(audit[0].deviceId, "device recorded for the audit");
+});
+
+test("gallery is split by category; one vote in each category", async () => {
+  const ctx = setup();
+  const solo = addEntry(ctx, "a@mcgill.ca", "Lone Witch", "approved", "individual").id;
+  const team = addEntry(ctx, "b@mcgill.ca", "Ghost Crew", "approved", "group").id;
+  const cookie = await login(ctx, "voter@mcgill.ca");
+  await vote(ctx, cookie, solo);
+  await vote(ctx, cookie, team);
+  const page = await home(ctx, cookie);
+  assert.match(page, /<section id="individual">[\s\S]*Lone Witch[\s\S]*<\/section>[\s\S]*<section id="group">[\s\S]*Ghost Crew/);
+  assert.equal((page.match(/Your vote|Votre vote/g) ?? []).length, 2);
+  assert.equal(voteAudit(ctx.db).length, 2);
 });
 
 test("voting refused after close and for unapproved entries; counts never shown publicly", async () => {

@@ -97,14 +97,14 @@ export function votesPage(lang: Lang, ranked: Ranked[], votes: AuditVote[], flas
   ${votes.length === 0
     ? html`<p>${a.noVotes}</p>`
     : html`<table>
-  <tr><th>${a.voter}</th><th>${a.entry}</th><th>${a.time}</th><th>${a.flags}</th><th></th></tr>
+  <tr><th>${a.voter}</th><th>${a.category}</th><th>${a.entry}</th><th>${a.time}</th><th>${a.flags}</th><th></th></tr>
   ${votes.map(
     (v) => html`<tr>
-    <td>${v.voterEmail}</td><td>${v.entryName}</td><td>${fmt(v.at)}</td>
+    <td>${v.voterEmail}</td><td>${t(lang).categories[v.category]}</td><td>${v.entryName}</td><td>${fmt(v.at)}</td>
     <td>${v.flags.sharedDevice ? html`<span class="flag">${fill(a.flagDevice, { n: v.flags.sharedDevice })}</span> ` : ""}${v.flags.ipBurst
       ? html`<span class="flag">${fill(a.flagIp, { n: v.flags.ipBurst })}</span>`
       : ""}</td>
-    <td><form method="post" action="/admin/votes/void"><input type="hidden" name="voter" value="${v.voterEmail}"><button class="small danger" type="submit">${a.voidVote}</button></form></td>
+    <td><form method="post" action="/admin/votes/void"><input type="hidden" name="voter" value="${v.voterEmail}"><input type="hidden" name="category" value="${v.category}"><button class="small danger" type="submit">${a.voidVote}</button></form></td>
   </tr>`,
   )}
 </table>`}

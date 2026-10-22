@@ -112,6 +112,7 @@ export async function rejectEntry(deps: AuthDeps, admin: string, id: number, rea
 
 export type AuditVote = {
   voterEmail: string;
+  category: Category;
   entryId: number;
   entryName: string;
   deviceId: string | null;
@@ -126,15 +127,17 @@ export type AuditVote = {
  * DRC wifi is one shared IP and people do lend phones.
  * - sharedDevice: other voters who voted from the same browser
  * - ipBurst: votes from the same IP within ±10 min (only set when ≥ 5)
+ * Both count within one category: a voter's own two votes always share a device.
  */
 export function voteAudit(db: Db): AuditVote[] {
   const rows = db
     .prepare(
-      `SELECT v.voter_email, v.entry_id, e.name, v.device_id, v.ip, v.ua, v.updated_at
+      `SELECT v.voter_email, v.category, v.entry_id, e.name, v.device_id, v.ip, v.ua, v.updated_at
          FROM votes v JOIN entries e ON e.id = v.entry_id ORDER BY v.updated_at DESC`,
     )
     .all() as {
     voter_email: string;
+    category: Category;
     entry_id: number;
     name: string;
     device_id: string | null;
@@ -143,13 +146,17 @@ export function voteAudit(db: Db): AuditVote[] {
     updated_at: number;
   }[];
   const byDevice = new Map<string, number>();
-  for (const r of rows) if (r.device_id) byDevice.set(r.device_id, (byDevice.get(r.device_id) ?? 0) + 1);
+  const key = (r: { device_id: string | null; category: string }) => `${r.category}:${r.device_id}`;
+  for (const r of rows) if (r.device_id) byDevice.set(key(r), (byDevice.get(key(r)) ?? 0) + 1);
   return rows.map((r) => {
     const burst = r.ip
-      ? rows.filter((o) => o.ip === r.ip && Math.abs(o.updated_at - r.updated_at) <= BURST_WINDOW_MS).length
+      ? rows.filter(
+          (o) => o.ip === r.ip && o.category === r.category && Math.abs(o.updated_at - r.updated_at) <= BURST_WINDOW_MS,
+        ).length
       : 0;
     return {
       voterEmail: r.voter_email,
+      category: r.category,
       entryId: r.entry_id,
       entryName: r.name,
       deviceId: r.device_id,
@@ -157,17 +164,17 @@ export function voteAudit(db: Db): AuditVote[] {
       ua: r.ua,
       at: r.updated_at,
       flags: {
-        sharedDevice: r.device_id ? byDevice.get(r.device_id)! - 1 : 0,
+        sharedDevice: r.device_id ? byDevice.get(key(r))! - 1 : 0,
         ipBurst: burst >= BURST_MIN_VOTES ? burst : 0,
       },
     };
   });
 }
 
-export function voidVote(deps: AuthDeps, admin: string, voterEmail: string): boolean {
-  const res = deps.db.prepare("DELETE FROM votes WHERE voter_email = ?").run(voterEmail);
+export function voidVote(deps: AuthDeps, admin: string, voterEmail: string, category: string): boolean {
+  const res = deps.db.prepare("DELETE FROM votes WHERE voter_email = ? AND category = ?").run(voterEmail, category);
   if (res.changes === 0) return false;
-  logAdmin(deps.db, admin, "void_vote", voterEmail, null, deps.now().getTime());
+  logAdmin(deps.db, admin, "void_vote", voterEmail, category, deps.now().getTime());
   return true;
 }
 

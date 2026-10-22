@@ -148,7 +148,7 @@ test("submissions close at 14:00 but withdraw still works during voting; withdra
   const cookie = await login(ctx, "erin@mcgill.ca");
   await submit(ctx, cookie, valid, [{ bytes: await jpeg() }]);
   const entry = getEntryByOwner(ctx.db, "erin@mcgill.ca")!;
-  ctx.db.prepare("INSERT INTO votes (voter_email, entry_id, updated_at) VALUES ('v@mcgill.ca', ?, 0)").run(entry.id);
+  ctx.db.prepare("INSERT INTO votes (voter_email, category, entry_id, updated_at) VALUES ('v@mcgill.ca', 'group', ?, 0)").run(entry.id);
 
   ctx.clock.now = new Date("2026-10-30T18:30:00Z"); // 14:30 Montreal → voting
   const late = await submit(ctx, cookie, { ...valid, name: "Too late" }, []);

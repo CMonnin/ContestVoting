@@ -5,7 +5,7 @@ import { listApproved } from "../entries.ts";
 import { errorText, formatDateTime, t } from "../i18n.ts";
 import { seededShuffle } from "../shuffle.ts";
 import { homePage, landingPage, rulesPage } from "../views.ts";
-import { castVote, myVote, votingOpen } from "../votes.ts";
+import { castVote, myVotes, votingOpen } from "../votes.ts";
 import { LANG_COOKIE, YEAR_S, type App, type RouteCtx } from "./context.ts";
 
 export function publicRoutes(app: App, { deps, cookieOpts, phaseNow, render }: RouteCtx) {
@@ -39,7 +39,7 @@ export function publicRoutes(app: App, { deps, cookieOpts, phaseNow, render }: R
         showEntryLink: votingOpen(phase),
         entries,
         votingOpen: votingOpen(phase),
-        myVote: user ? myVote(db, user.email) : null,
+        myVotes: user ? myVotes(db, user.email) : {},
         results: phase === "results" ? getResults(db) : null,
         notice: c.req.query("voted") ? s.voted : undefined,
         error: err === "voting_closed" || err === "not_votable" ? errorText(lang, err) : undefined,

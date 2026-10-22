@@ -92,13 +92,15 @@ export function saveEntry(
   input: { owner: string; name: string; category: Category; caption: string; photos: StoredPhoto[] | null; now: number },
 ): { entry: Entry; replaced: StoredPhoto[] } {
   return tx(db, () => {
-    const existing = db.prepare("SELECT id FROM entries WHERE owner_email = ?").get(input.owner) as
-      | { id: number }
+    const existing = db.prepare("SELECT id, category FROM entries WHERE owner_email = ?").get(input.owner) as
+      | { id: number; category: Category }
       | undefined;
     let id: number;
     let replaced: StoredPhoto[] = [];
     if (existing) {
       id = existing.id;
+      // Votes were cast in the old category; they can't follow the entry into the new one.
+      if (existing.category !== input.category) db.prepare("DELETE FROM votes WHERE entry_id = ?").run(id);
       db.prepare(
         "UPDATE entries SET name = ?, category = ?, caption = ?, status = 'pending', reject_reason = NULL, consent_at = ?, updated_at = ? WHERE id = ?",
       ).run(input.name, input.category, input.caption, input.now, input.now, id);

@@ -97,7 +97,8 @@ export function adminRoutes(app: App, { deps, photosDir, phaseNow, render }: Rou
 
   app.post("/admin/votes/void", async (c) => {
     const form = await c.req.parseBody();
-    return back(c, voidVote(deps, admin(c), String(form.voter ?? "")) ? { n: "voided" } : { e: "not_found" }, "/admin/votes");
+    const ok = voidVote(deps, admin(c), String(form.voter ?? ""), String(form.category ?? ""));
+    return back(c, ok ? { n: "voided" } : { e: "not_found" }, "/admin/votes");
   });
 
   app.get("/admin/settings", (c) => {

@@ -51,12 +51,14 @@ CREATE TABLE IF NOT EXISTS photos (
   thumb       TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS votes (
-  voter_email TEXT PRIMARY KEY,
+  voter_email TEXT NOT NULL,
+  category    TEXT NOT NULL,
   entry_id    INTEGER NOT NULL REFERENCES entries(id) ON DELETE CASCADE,
   device_id   TEXT,
   ip          TEXT,
   ua          TEXT,
-  updated_at  INTEGER NOT NULL
+  updated_at  INTEGER NOT NULL,
+  PRIMARY KEY (voter_email, category)
 );
 CREATE TABLE IF NOT EXISTS admin_log (
   id          INTEGER PRIMARY KEY,

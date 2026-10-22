@@ -100,7 +100,7 @@ test("vote audit flags shared devices and IP bursts; void removes a vote", async
   const page = await (await get(ctx, "/admin/votes", admin)).text();
   assert.match(page, /same device as 1 other|même appareil que 1 autre/);
 
-  await adminPost(ctx, admin, "/admin/votes/void", { voter: "b@mcgill.ca" }, "/admin/votes");
+  await adminPost(ctx, admin, "/admin/votes/void", { voter: "b@mcgill.ca", category: "individual" }, "/admin/votes");
   assert.ok(!voteAudit(ctx.db).some((v) => v.voterEmail === "b@mcgill.ca"));
 });
 

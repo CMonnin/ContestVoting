@@ -81,6 +81,8 @@ export function addEntry(ctx: Ctx, owner: string, name: string, status = "pendin
 
 export function addVote(ctx: Ctx, voter: string, entryId: number, opts: { device?: string; ip?: string; at?: number } = {}) {
   ctx.db
-    .prepare("INSERT INTO votes (voter_email, entry_id, device_id, ip, ua, updated_at) VALUES (?, ?, ?, ?, 'ua', ?)")
-    .run(voter, entryId, opts.device ?? `dev-${voter}`, opts.ip ?? `ip-${voter}`, opts.at ?? ctx.clock.now.getTime());
+    .prepare(
+      "INSERT INTO votes (voter_email, category, entry_id, device_id, ip, ua, updated_at) SELECT ?, category, id, ?, ?, 'ua', ? FROM entries WHERE id = ?",
+    )
+    .run(voter, opts.device ?? `dev-${voter}`, opts.ip ?? `ip-${voter}`, opts.at ?? ctx.clock.now.getTime(), entryId);
 }

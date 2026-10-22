@@ -1,6 +1,7 @@
 import { html, raw } from "hono/html";
 import type { HtmlEscapedString } from "hono/utils/html";
 import type { User } from "./auth.ts";
+import type { MyVotes } from "./votes.ts";
 import type { Results } from "./admin.ts";
 import { CATEGORIES, type Entry, type GalleryEntry } from "./entries.ts";
 import { t, type Lang } from "./i18n.ts";
@@ -54,7 +55,8 @@ button.small { width:auto; margin:0; padding:4px 10px; font-size:.85rem; }
 .gallery { display:grid; gap:16px; }
 .card { background:var(--panel); border-radius:12px; padding:12px; }
 .card img.cover { width:100%; max-height:70vh; object-fit:cover; border-radius:8px; display:block; }
-.card h2 { margin:12px 0 4px; }
+.card h3 { font-size:1.1rem; margin:12px 0 4px; }
+section > h2 { font-size:1.4rem; margin:32px 0 12px; }
 footer { color:var(--muted); font-size:.85rem; text-align:center; margin:40px 0 16px; }
 `;
 
@@ -113,18 +115,28 @@ export function homePage(
     showEntryLink: boolean;
     entries: GalleryEntry[];
     votingOpen: boolean;
-    myVote: number | null;
+    myVotes: MyVotes;
     results: Results | null;
     notice?: string;
     error?: string;
   },
 ): Body {
   const s = t(lang);
-  const voteControl = (id: number) => {
+  const voteControl = (e: GalleryEntry) => {
     if (!opts.votingOpen || !opts.user) return "";
-    if (opts.myVote === id) return html`<p class="badge approved">${s.yourVote}</p>`;
-    return html`<form method="post" action="/vote"><input type="hidden" name="entry" value="${id}"><button type="submit">${opts.myVote ? s.changeVote : s.vote}</button></form>`;
+    const mine = opts.myVotes[e.category];
+    if (mine === e.id) return html`<p class="badge approved">${s.yourVote}</p>`;
+    return html`<form method="post" action="/vote"><input type="hidden" name="entry" value="${e.id}"><button type="submit">${mine ? s.changeVote : s.vote}</button></form>`;
   };
+  const card = (e: GalleryEntry) => html`<article class="card" id="e${e.id}">
+  <a href="/photos/${e.photos[0].file}"><img class="cover" src="/photos/${e.photos[0].thumb}" alt="${e.name}"></a>
+  ${e.photos.length > 1
+    ? html`<div class="thumbs">${e.photos.slice(1).map((p) => html`<a href="/photos/${p.file}"><img src="/photos/${p.thumb}" alt=""></a>`)}</div>`
+    : ""}
+  <h3>${e.name}</h3>
+  ${e.caption ? html`<p>${e.caption}</p>` : ""}
+  ${voteControl(e)}
+</article>`;
   return html`<h1>🎃 ${s.title}</h1>
 ${opts.notice ? html`<p class="notice" role="status">${opts.notice}</p>` : ""}
 ${opts.error ? html`<p class="error" role="alert">${opts.error}</p>` : ""}
@@ -138,6 +150,7 @@ ${opts.results
     : ""}
 <div class="panel">
   <p><strong>${opts.phaseText}</strong></p>
+  ${opts.votingOpen ? html`<p>${s.votePerCategory}</p>` : ""}
   ${opts.user
     ? opts.showEntryLink ? html`<p><a href="/me/entry">${s.myEntry}</a></p>` : ""
     : html`${opts.votingOpen ? html`<p>${s.loginToVote}</p>` : ""}<p><a href="/login">${s.login}</a></p>`}
@@ -145,17 +158,12 @@ ${opts.results
 </div>
 ${opts.entries.length === 0
     ? html`<p class="help">${s.galleryEmpty}</p>`
-    : html`<div class="gallery">${opts.entries.map(
-        (e) => html`<article class="card" id="e${e.id}">
-  <a href="/photos/${e.photos[0].file}"><img class="cover" src="/photos/${e.photos[0].thumb}" alt="${e.name}"></a>
-  ${e.photos.length > 1
-    ? html`<div class="thumbs">${e.photos.slice(1).map((p) => html`<a href="/photos/${p.file}"><img src="/photos/${p.thumb}" alt=""></a>`)}</div>`
-    : ""}
-  <h2>${e.name}</h2>
-  ${e.caption ? html`<p>${e.caption}</p>` : ""}
-  ${voteControl(e.id)}
-</article>`,
-      )}</div>`}`;
+    : CATEGORIES.map((c) => {
+        const inCat = opts.entries.filter((e) => e.category === c);
+        return inCat.length
+          ? html`<section id="${c}"><h2>${s.categories[c]}</h2><div class="gallery">${inCat.map(card)}</div></section>`
+          : "";
+      })}`;
 }
 
 export type EntryFormValues = { name: string; category: string; caption: string };

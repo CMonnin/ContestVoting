@@ -35,7 +35,8 @@ Times live in config (`.env`), not code.
 ## 3. Voting
 
 - Only during `open` and `voting`, and only for `approved` entries.
-- One vote per email; a later vote replaces the earlier one (upsert). Self-votes are allowed.
+- One vote per email **per category** (individual, group); a later vote in a category replaces the earlier one (upsert). Self-votes are allowed.
+- Moving an entry to the other category deletes its votes (they were cast in the old category).
 - Tallies are hidden from the public until `results`. Admins see live counts.
 - Each vote records ip + user-agent for the admin audit only.
 - Entry withdrawn/removed → its votes are deleted. The voter's "my vote" shows none, and they can vote again.
@@ -135,7 +136,7 @@ sessions     (token_hash PK, email, device_id, ip, ua, expires_at)
 entries      (id PK, owner_email UNIQUE, name, category, caption, status,
               reject_reason, consent_at, created_at, updated_at)
 photos       (id PK, entry_id FK, position, file, thumb)
-votes        (voter_email PK, entry_id FK, device_id, ip, ua, updated_at)
+votes        (voter_email, category, entry_id FK, device_id, ip, ua, updated_at; PK voter_email+category)
 admin_log    (id PK, admin_email, action, target, detail, at)
 settings     (key PK, value)   -- phase_override, extra_domains, results_json
 ```
