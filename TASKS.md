@@ -4,8 +4,8 @@ Ordered by the critical path. The deliverability test gates everything else.
 
 ## Now (10-20 / 10-21) — external setup (you)
 
-- [ ] Scaleway account; Transactional Email in `fr-par`; add domain `halloween2026.douglasneuroinformatics.ca` (`mail.` is taken by Mailgun); generate SMTP credentials.
-- [ ] DNS (whoever owns it): `halloween2026` A/AAAA → DNP server; Scaleway SPF / DKIM / DMARC / MX records on `halloween2026` itself.
+- [x] Scaleway account; Transactional Email in `fr-par`; add domain `halloween2026.douglasneuroinformatics.ca` (`mail.` is taken by Mailgun); generate SMTP credentials.
+- [x] DNS (DreamHost): `halloween2026` A → 134.87.12.99; Scaleway SPF / DKIM / DMARC on `halloween2026` itself (live 10-22; no MX, not needed to send).
 - [ ] Confirm Docker + ports 80/443 on the DNP server; add a Caddy site block.
 - [ ] Create the public repo in the DNP org (MIT).
 - [ ] Ask the DRC organizers: FR + EN rules text, admin emails, DRC logo (due 10-24).
@@ -24,6 +24,7 @@ Ordered by the critical path. The deliverability test gates everything else.
 
 - [ ] Send codes to real `@mcgill.ca`, `@mail.mcgill.ca`, `@douglas.mcgill.ca`, `@ssss.gouv.qc.ca` inboxes.
 - [ ] Record time-to-inbox and inbox vs junk; check DKIM/SPF/DMARC pass in the headers.
+  - 10-22 `@ssss.gouv.qc.ca`: inbox, 50 s.
 - [ ] Junked or > 2 min → ask Douglas IT to allowlist, or decide on the fallback (unverified email + audit).
 
 ## T3 — Entries + photos (by 10-24)
