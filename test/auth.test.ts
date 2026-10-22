@@ -15,6 +15,7 @@ test("happy path: code by email, verify, session cookie, logged-in page", async 
   const ctx = setup();
   const res1 = await ctx.app.request(post("/login", { email: "  Alice@McGill.ca " }));
   assert.equal(res1.status, 200);
+  assert.match(await res1.text(), /(Junk|courriels indésirables)<\/strong>/);
   assert.equal(ctx.sent.length, 1);
   assert.equal(ctx.sent[0].to, "alice@mcgill.ca");
 

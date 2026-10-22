@@ -34,6 +34,7 @@ fieldset { border:0; padding:0; margin:14px 0 0; }
 legend { font-weight:600; padding:0; }
 button.danger { background:transparent; color:var(--danger); border:1px solid var(--danger); }
 .notice { background:#1f3a1f; color:#c8f0c8; padding:12px; border-radius:8px; }
+.notice.warn { background:#4a3b12; color:#ffd77a; }
 .badge { display:inline-block; padding:4px 10px; border-radius:999px; font-weight:700; font-size:.9rem; }
 .badge.pending { background:#4a3b12; color:#ffd77a; }
 .badge.approved { background:#1f3a1f; color:#9be29b; }
@@ -248,6 +249,7 @@ export function verifyPage(lang: Lang, email: string, error?: string): Body {
   return html`<h1>${s.login}</h1>
 <form class="panel" method="post" action="/login/verify">
   <p>${s.codeSentTo} <strong>${email}</strong></p>
+  <p class="notice warn">📬 ${raw(s.junkHint)}</p>
   <input type="hidden" name="email" value="${email}">
   <label for="code">${s.codeLabel}</label>
   <input id="code" class="code" name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9 ]*" maxlength="7" required autofocus>
