@@ -55,7 +55,7 @@ test("entry pages need login", async () => {
   const ctx = setup();
   const res = await get(ctx, "/me/entry");
   assert.equal(res.status, 302);
-  assert.equal(res.headers.get("location"), "/login");
+  assert.equal(res.headers.get("location"), "/login?next=%2Fme%2Fentry");
 });
 
 test("submit: photos resized to WebP, metadata stripped, entry pending", async () => {

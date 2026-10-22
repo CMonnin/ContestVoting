@@ -6,6 +6,7 @@ import { errorText, t, type ErrorKey } from "../i18n.ts";
 import type { Phase } from "../phase.ts";
 import { deletePhotoFiles, isPhotoName, MAX_PHOTO_BYTES, MAX_PHOTOS, processPhoto, storePhoto } from "../photos.ts";
 import { entryPage } from "../views.ts";
+import { loginFor } from "./auth.ts";
 import type { App, RouteCtx } from "./context.ts";
 
 export function entryRoutes(app: App, { deps, photosDir, phaseNow, render }: RouteCtx) {
@@ -13,7 +14,7 @@ export function entryRoutes(app: App, { deps, photosDir, phaseNow, render }: Rou
   const canEdit = (p: Phase) => p === "open";
   const canWithdraw = (p: Phase) => p === "open" || p === "voting";
 
-  app.use("/me/*", async (c, next) => (c.get("user") ? next() : c.redirect("/login")));
+  app.use("/me/*", async (c, next) => (c.get("user") ? next() : c.redirect(loginFor(c.req.path))));
 
   app.get("/me/entry", (c) => {
     const lang = c.get("lang");

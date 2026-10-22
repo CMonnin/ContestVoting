@@ -266,7 +266,7 @@ ${opts.results
   ${opts.votingOpen ? html`<p>${s.votePerCategory}</p>` : ""}
   ${opts.user
     ? opts.showEntryLink ? html`<p><a href="/me/entry">${s.myEntry}</a></p>` : ""
-    : html`${opts.votingOpen ? html`<p>${s.loginToVote}</p>` : ""}<p><a href="/login">${s.login}</a></p>`}
+    : html`${opts.votingOpen ? html`<p>${s.loginToVote}</p>` : ""}<p><a href="/login?next=/gallery">${s.login}</a></p>`}
 </div>
 ${opts.entries.length === 0
     ? html`<p class="help">${s.galleryEmpty}</p>`
@@ -338,24 +338,31 @@ ${entry && opts.canWithdraw
     : ""}`;
 }
 
-export function loginPage(lang: Lang, opts: { email?: string; error?: string } = {}): Body {
+/** Where login lands when no page asked for it. */
+export const DEFAULT_NEXT = "/gallery";
+
+export function loginPage(lang: Lang, opts: { email?: string; error?: string; next?: string } = {}): Body {
   const s = t(lang);
+  const next = opts.next ?? DEFAULT_NEXT;
   return html`<h1>${s.login}</h1>
 <form class="panel" method="post" action="/login">
+  <input type="hidden" name="next" value="${next}">
   <label for="email">${s.emailLabel}</label>
   <input id="email" name="email" type="email" inputmode="email" autocomplete="email" required value="${opts.email ?? ""}">
   <p class="help">${s.emailHelp}</p>
   ${opts.error ? html`<p class="error" role="alert">${opts.error}</p>` : ""}
   <button type="submit">${s.sendCode}</button>
 </form>
-<p style="text-align:center"><a class="help" href="/login/verify">${s.haveCode}</a></p>`;
+<p style="text-align:center"><a class="help" href="/login/verify?next=${encodeURIComponent(next)}">${s.haveCode}</a></p>`;
 }
 
 /** `email` null: the person already has a code (e.g. from an admin) and types their email here. */
-export function verifyPage(lang: Lang, email: string | null, error?: string): Body {
+export function verifyPage(lang: Lang, email: string | null, error?: string, next = DEFAULT_NEXT): Body {
   const s = t(lang);
+  const again = `/login?next=${encodeURIComponent(next)}`;
   return html`<h1>${s.login}</h1>
 <form class="panel" method="post" action="/login/verify">
+  <input type="hidden" name="next" value="${next}">
   ${email
     ? html`<p>${s.codeSentTo} <strong>${email}</strong></p>
   <p class="notice warn">📬 ${raw(s.junkHint)}</p>
@@ -371,8 +378,9 @@ export function verifyPage(lang: Lang, email: string | null, error?: string): Bo
 ${email
     ? html`<form method="post" action="/login" style="text-align:center">
   <input type="hidden" name="email" value="${email}">
+  <input type="hidden" name="next" value="${next}">
   <button class="link" type="submit">${s.resend}</button>
-  <a class="help" href="/login">${s.otherEmail}</a>
+  <a class="help" href="${again}">${s.otherEmail}</a>
 </form>`
-    : html`<p style="text-align:center"><a class="help" href="/login">${s.sendCode}</a></p>`}`;
+    : html`<p style="text-align:center"><a class="help" href="${again}">${s.sendCode}</a></p>`}`;
 }

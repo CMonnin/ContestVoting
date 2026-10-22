@@ -157,7 +157,7 @@ test("admin-issued code follows the domain rules", () => {
 test("\"already have a code\": code screen without sending an email", async () => {
   const ctx = setup();
   const login = await (await ctx.app.request("https://halloween.test/login")).text();
-  assert.match(login, /href="\/login\/verify"/);
+  assert.match(login, /href="\/login\/verify\?next=%2Fgallery"/);
   const page = await (await ctx.app.request("https://halloween.test/login/verify")).text();
   assert.match(page, /<input id="email" name="email" type="email"/);
   assert.match(page, /name="code"/);
@@ -166,4 +166,25 @@ test("\"already have a code\": code screen without sending an email", async () =
   const { code } = issueCode(ctx.deps, "ivy@mcgill.ca") as { code: string };
   const res = await ctx.app.request(post("/login/verify", { email: "ivy@mcgill.ca", code }));
   assert.equal(res.status, 302);
+});
+
+test("login returns to the page that asked for it; only same-site paths", async () => {
+  const ctx = setup();
+  const entry = await ctx.app.request("https://halloween.test/me/entry");
+  const loginUrl = entry.headers.get("location")!;
+  assert.match(await (await ctx.app.request(`https://halloween.test${loginUrl}`)).text(), /name="next" value="\/me\/entry"/);
+
+  const finish = async (next: string) => {
+    const email = `n${Math.random().toString(36).slice(2, 8)}@mcgill.ca`;
+    const codeScreen = await (await ctx.app.request(post("/login", { email, next }))).text();
+    const carried = /name="next" value="([^"]*)"/.exec(codeScreen)![1];
+    const res = await ctx.app.request(post("/login/verify", { email, code: ctx.lastCode(), next: carried }));
+    ctx.advance(61_000);
+    return res.headers.get("location");
+  };
+  assert.equal(await finish("/me/entry"), "/me/entry");
+  assert.equal(await finish(""), "/gallery");
+  for (const evil of ["//evil.com", "https://evil.com", "/\\evil.com", "javascript:alert(1)", "/\tevil"]) {
+    assert.equal(await finish(evil), "/gallery", evil);
+  }
 });

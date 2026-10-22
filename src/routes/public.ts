@@ -8,6 +8,7 @@ import { errorText, t } from "../i18n.ts";
 import { seededShuffle } from "../shuffle.ts";
 import { homePage } from "../views.ts";
 import { castVote, myVotes, votingOpen } from "../votes.ts";
+import { loginFor } from "./auth.ts";
 import { LANG_COOKIE, YEAR_S, type App, type RouteCtx } from "./context.ts";
 
 export function publicRoutes(app: App, { deps, cookieOpts, phaseNow, render }: RouteCtx) {
@@ -68,7 +69,7 @@ export function publicRoutes(app: App, { deps, cookieOpts, phaseNow, render }: R
 
   app.post("/vote", async (c) => {
     const user = c.get("user");
-    if (!user) return c.redirect("/login");
+    if (!user) return c.redirect(loginFor("/gallery"));
     const form = await c.req.parseBody();
     const entryId = Number(form.entry);
     const res = castVote(db, phaseNow(), user.email, entryId, {

@@ -21,6 +21,7 @@ import { CATEGORIES, deleteEntry, type Category } from "../entries.ts";
 import type { Lang } from "../i18n.ts";
 import { isPhase } from "../phase.ts";
 import { deletePhotoFiles } from "../photos.ts";
+import { loginFor } from "./auth.ts";
 import type { App, Env, RouteCtx } from "./context.ts";
 
 export function adminRoutes(app: App, { deps, photosDir, phaseNow, render }: RouteCtx) {
@@ -28,7 +29,7 @@ export function adminRoutes(app: App, { deps, photosDir, phaseNow, render }: Rou
 
   const adminGuard = async (c: Context<Env>, next: () => Promise<void>) => {
     const user = c.get("user");
-    if (!user) return c.redirect("/login");
+    if (!user) return c.redirect(loginFor(c.req.path));
     if (!user.isAdmin) return c.notFound();
     await next();
   };

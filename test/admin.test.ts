@@ -22,7 +22,7 @@ test("admin pages: anon → login, non-admin → 404, admin → 200", async () =
   const user = await login(ctx, "alice@mcgill.ca");
   const admin = await login(ctx, ADMIN);
   for (const path of ["/admin", "/admin/entries", "/admin/votes", "/admin/code", "/admin/settings"]) {
-    assert.equal((await get(ctx, path)).headers.get("location"), "/login", path);
+    assert.equal((await get(ctx, path)).headers.get("location"), `/login?next=${encodeURIComponent(path)}`, path);
     assert.equal((await get(ctx, path, user)).status, 404, path);
     assert.equal((await get(ctx, path, admin)).status, 200, path);
   }

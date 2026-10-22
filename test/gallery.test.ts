@@ -53,7 +53,7 @@ test("vote flow: anonymous is sent to login; vote, see it marked, change it", as
   const a = addEntry(ctx, "a@mcgill.ca", "Witch", "approved").id;
   const b = addEntry(ctx, "b@mcgill.ca", "Wizard", "approved").id;
 
-  assert.equal((await vote(ctx, "", a)).headers.get("location"), "/login");
+  assert.equal((await vote(ctx, "", a)).headers.get("location"), "/login?next=%2Fgallery");
   assert.match(await home(ctx), /Log in with your institutional email to vote|Connectez-vous avec votre courriel institutionnel/);
 
   const cookie = await login(ctx, "voter@mcgill.ca");
