@@ -1,3 +1,6 @@
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
+import { serveStatic } from "@hono/node-server/serve-static";
 import { setCookie } from "hono/cookie";
 import { getResults } from "../admin.ts";
 import { loadRules } from "../content.ts";
@@ -20,11 +23,30 @@ export function publicRoutes(app: App, { deps, cookieOpts, phaseNow, render }: R
     return c.redirect(back?.startsWith(cfg.origin + "/") ? back.slice(cfg.origin.length) : "/");
   });
 
-  app.get("/", (c) => {
+  // The organizers' landing page, with its two buttons switched on as the contest moves along.
+  app.get("/", async (c) => {
     const lang = c.get("lang");
-    if (phaseNow() !== "landing") return c.redirect("/gallery");
-    return render(c, landingPage(lang, formatDateTime(cfg.openAt, lang, cfg.tz), loadRules(cfg.contentDir, lang)));
+    const phase = phaseNow();
+    let page: string;
+    try {
+      page = await readFile(join(cfg.siteDir, "index.html"), "utf8");
+    } catch {
+      if (phase !== "landing") return c.redirect("/gallery");
+      return render(c, landingPage(lang, formatDateTime(cfg.openAt, lang, cfg.tz), loadRules(cfg.contentDir, lang)));
+    }
+    const state: Record<string, string> = { lang };
+    if (phase !== "landing") {
+      state.submit = phase === "open" ? "/me/entry" : "closed";
+      state.gallery = "/gallery";
+    }
+    const attrs = Object.entries(state).map(([k, v]) => ` data-${k}="${v}"`).join("");
+    return c.html(page.replace("<body>", `<body${attrs}>`));
   });
+
+  const site = serveStatic({ root: cfg.siteDir });
+  app.get("/landing.js", site);
+  app.get("/images/*", site);
+  app.get("/fonts/*", site);
 
   app.get("/gallery", (c) => {
     const lang = c.get("lang");

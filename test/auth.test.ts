@@ -116,9 +116,9 @@ test("logout ends the session", async () => {
 
 test("language: Accept-Language picks English, French is the fallback", async () => {
   const ctx = setup("2026-10-21T12:00:00Z");
-  const en = await ctx.app.request("https://halloween.test/", { headers: { "accept-language": "en-CA,en;q=0.9" } });
+  const en = await ctx.app.request("https://halloween.test/login", { headers: { "accept-language": "en-CA,en;q=0.9" } });
   assert.match(await en.text(), /<html lang="en">/);
-  const de = await ctx.app.request("https://halloween.test/", { headers: { "accept-language": "de-DE" } });
+  const de = await ctx.app.request("https://halloween.test/login", { headers: { "accept-language": "de-DE" } });
   assert.match(await de.text(), /<html lang="fr">/);
 });
 

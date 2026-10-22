@@ -5,6 +5,9 @@ COPY package.json package-lock.json ./
 RUN npm ci --omit=dev && npm cache clean --force
 COPY src ./src
 COPY content ./content
+COPY index.html landing.js ./
+COPY images ./images
+COPY fonts ./fonts
 COPY scripts ./scripts
 USER node
 EXPOSE 3000

@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import { zonedTimeToUtc } from "./time.ts";
 
 export type Config = {
@@ -19,6 +20,8 @@ export type Config = {
   sessionSecret: string;
   dataDir: string;
   contentDir: string;
+  /** Where the organizers' landing page lives: index.html, landing.js, images/, fonts/. */
+  siteDir: string;
   port: number;
   trustProxy: boolean;
   ipSendLimitPerHour: number;
@@ -105,6 +108,7 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     sessionSecret,
     dataDir: env.DATA_DIR?.trim() || "./data",
     contentDir: env.CONTENT_DIR?.trim() || "./content",
+    siteDir: env.SITE_DIR?.trim() || fileURLToPath(new URL("..", import.meta.url)),
     port: Number(env.PORT ?? 3000),
     trustProxy: env.TRUST_PROXY === "1",
     ipSendLimitPerHour: Number(env.IP_SEND_LIMIT_PER_HOUR ?? 100),

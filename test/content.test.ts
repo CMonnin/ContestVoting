@@ -6,13 +6,10 @@ const ORIGIN = "https://halloween.test";
 const page = async (ctx: ReturnType<typeof setup>, path: string, lang: string) =>
   (await ctx.app.request(`${ORIGIN}${path}`, { headers: { "accept-language": lang } })).text();
 
-test("landing shows the opening date and the rules in the viewer's language", async () => {
+test("rules page in the viewer's language", async () => {
   const ctx = setup("2026-10-21T12:00:00Z");
-  const fr = await page(ctx, "/", "fr-CA");
-  assert.match(fr, /30 octobre/);
-  assert.match(fr, /<div class="panel rules"><h2>Le 30 octobre/);
-  const en = await page(ctx, "/", "en-CA");
-  assert.match(en, /<div class="panel rules"><h2>On October 30/);
+  assert.match(await page(ctx, "/rules", "fr-CA"), /<div class="panel rules"><h2>Le 30 octobre/);
+  assert.match(await page(ctx, "/rules", "en-CA"), /<div class="panel rules"><h2>On October 30/);
 });
 
 test("/rules is available in every phase and linked from the gallery", async () => {
@@ -24,7 +21,7 @@ test("/rules is available in every phase and linked from the gallery", async () 
 test("missing content file still renders the page", async () => {
   const ctx = setup("2026-10-21T12:00:00Z");
   ctx.cfg.contentDir = "/nonexistent";
-  const res = await ctx.app.request(`${ORIGIN}/`);
+  const res = await ctx.app.request(`${ORIGIN}/rules`);
   assert.equal(res.status, 200);
-  assert.doesNotMatch(await res.text(), /panel rules/);
+  assert.doesNotMatch(await res.text(), /<h2>/);
 });
