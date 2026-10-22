@@ -117,3 +117,10 @@ test("results banner appears only once published", async () => {
   assert.match(page, new RegExp(`(Individual|Individuel)</h3><ol><li><a href="#e${a}">Pumpkin King</a> — 7 vote`));
   assert.match(page, new RegExp(`(Group|Groupe)</h3><ol><li><a href="#e${g}">Ghost Crew</a> — 4 vote`));
 });
+
+test("page stylesheet reaches the browser unescaped", async () => {
+  const page = await home(setup());
+  const css = /<style>([\s\S]*?)<\/style>/.exec(page)![1];
+  assert.match(css, /font-family:"Creepster"/);
+  assert.doesNotMatch(css, /&quot;|&gt;|&amp;/);
+});

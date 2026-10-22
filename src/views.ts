@@ -84,7 +84,7 @@ export function layout(lang: Lang, user: User | null, body: Body): Body {
 <meta name="robots" content="noindex">
 <title>${s.title}</title>
 <link href="/fonts/fonts.css" rel="stylesheet">
-<style>${CSS}</style>
+<style>${raw(CSS)}</style>
 </head>
 <body>
 <div class="wrap">
