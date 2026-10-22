@@ -32,6 +32,31 @@ const hashCode = (secret: string, email: string, code: string) =>
 
 const hashToken = (token: string) => createHash("sha256").update(token).digest("hex");
 
+/** Normalised email if it may log in at all (format + domain allowlist; admins and preview testers bypass the domain). */
+function checkEmail(
+  deps: Pick<AuthDeps, "db" | "cfg">,
+  rawEmail: string,
+): { ok: true; email: string; privileged: boolean } | { ok: false; reason: "invalid_email" | "domain" } {
+  const email = normalizeEmail(rawEmail);
+  if (!EMAIL_RE.test(email) || email.length > 254) return { ok: false, reason: "invalid_email" };
+  const privileged = isAdmin(deps.cfg, email) || deps.cfg.previewEmails.includes(email);
+  if (!privileged && !allowedDomains(deps).includes(email.split("@")[1])) return { ok: false, reason: "domain" };
+  return { ok: true, email, privileged };
+}
+
+/** New 6-digit code for `email`, replacing any earlier one; only its hash is stored. */
+function storeCode(deps: Pick<AuthDeps, "db" | "cfg">, email: string, now: number): string {
+  const code = String(randomInt(0, 1_000_000)).padStart(6, "0");
+  deps.db
+    .prepare(
+      `INSERT INTO otp_codes (email, code_hash, expires_at, attempts, sent_at) VALUES (?, ?, ?, 0, ?)
+     ON CONFLICT(email) DO UPDATE SET code_hash = excluded.code_hash, expires_at = excluded.expires_at,
+       attempts = 0, sent_at = excluded.sent_at`,
+    )
+    .run(email, hashCode(deps.cfg.sessionSecret, email, code), now + CODE_TTL_MS, now);
+  return code;
+}
+
 export type RequestCodeResult =
   | { ok: true; email: string }
   | { ok: false; reason: "invalid_email" | "domain" | "not_open" | "email_limit" | "ip_limit" | "send_failed" }
@@ -44,11 +69,9 @@ export async function requestCode(
   loginOpen: boolean,
 ): Promise<RequestCodeResult> {
   const { db, cfg } = deps;
-  const email = normalizeEmail(rawEmail);
-  if (!EMAIL_RE.test(email) || email.length > 254) return { ok: false, reason: "invalid_email" };
-
-  const privileged = isAdmin(cfg, email) || cfg.previewEmails.includes(email);
-  if (!privileged && !allowedDomains(deps).includes(email.split("@")[1])) return { ok: false, reason: "domain" };
+  const checked = checkEmail(deps, rawEmail);
+  if (!checked.ok) return checked;
+  const { email, privileged } = checked;
   if (!privileged && !loginOpen) return { ok: false, reason: "not_open" };
 
   const now = deps.now().getTime();
@@ -65,12 +88,7 @@ export async function requestCode(
     return { ok: false, reason: "ip_limit" };
   }
 
-  const code = String(randomInt(0, 1_000_000)).padStart(6, "0");
-  db.prepare(
-    `INSERT INTO otp_codes (email, code_hash, expires_at, attempts, sent_at) VALUES (?, ?, ?, 0, ?)
-     ON CONFLICT(email) DO UPDATE SET code_hash = excluded.code_hash, expires_at = excluded.expires_at,
-       attempts = 0, sent_at = excluded.sent_at`,
-  ).run(email, hashCode(cfg.sessionSecret, email, code), now + CODE_TTL_MS, now);
+  const code = storeCode(deps, email, now);
   db.prepare("INSERT INTO otp_sends (email, ip, sent_at) VALUES (?, ?, ?)").run(email, ip, now);
 
   try {
@@ -81,6 +99,22 @@ export async function requestCode(
     return { ok: false, reason: "send_failed" };
   }
   return { ok: true, email };
+}
+
+/**
+ * Fallback when the emailed code is stuck in a junk filter: an admin, with the person
+ * in front of them, gets a code to read out. Same rules as an emailed code (domain,
+ * 10-minute expiry, 5 attempts); no rate limit or phase check, since only admins call it.
+ */
+export function issueCode(
+  deps: Pick<AuthDeps, "db" | "cfg" | "now">,
+  rawEmail: string,
+): { ok: true; email: string; code: string; expiresAt: Date } | { ok: false; reason: "invalid_email" | "domain" } {
+  const checked = checkEmail(deps, rawEmail);
+  if (!checked.ok) return checked;
+  const now = deps.now().getTime();
+  const code = storeCode(deps, checked.email, now);
+  return { ok: true, email: checked.email, code, expiresAt: new Date(now + CODE_TTL_MS) };
 }
 
 export type VerifyResult =

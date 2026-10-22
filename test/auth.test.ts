@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import { issueCode } from "../src/auth.ts";
 import { setSetting } from "../src/db.ts";
 import { post, setup } from "./helpers.ts";
 
@@ -122,4 +123,30 @@ test("user text is escaped in pages", async () => {
   const ctx = setup();
   const res = await ctx.app.request(post("/login", { email: '"><script>alert(1)</script>' }));
   assert.doesNotMatch(await res.text(), /<script>alert/);
+});
+
+test("admin-issued code: no email sent, logs in like an emailed one, replaces an emailed code", async () => {
+  const ctx = setup();
+  await ctx.app.request(post("/login", { email: "hana@mcgill.ca" }));
+  const emailed = ctx.lastCode();
+  const sentBefore = ctx.sent.length;
+
+  const res = issueCode(ctx.deps, "  Hana@McGill.ca ");
+  assert.ok(res.ok);
+  assert.equal(res.email, "hana@mcgill.ca");
+  assert.match(res.code, /^\d{6}$/);
+  assert.equal(ctx.sent.length, sentBefore, "nothing emailed");
+
+  if (emailed !== res.code) {
+    assert.equal((await ctx.app.request(post("/login/verify", { email: "hana@mcgill.ca", code: emailed }))).status, 400);
+  }
+  const ok = await ctx.app.request(post("/login/verify", { email: "hana@mcgill.ca", code: res.code }));
+  assert.equal(ok.status, 302);
+  assert.ok(sessionCookie(ok));
+});
+
+test("admin-issued code follows the domain rules", () => {
+  const ctx = setup();
+  assert.deepEqual(issueCode(ctx.deps, "bob@gmail.com"), { ok: false, reason: "domain" });
+  assert.deepEqual(issueCode(ctx.deps, "nope"), { ok: false, reason: "invalid_email" });
 });
