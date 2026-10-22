@@ -88,7 +88,7 @@ export function layout(lang: Lang, user: User | null, body: Body): Body {
     : ""}
 </header>
 <nav class="main">
-  <a href="/">${s.gallery}</a>
+  <a href="/gallery">${s.gallery}</a>
   ${user ? html`<a href="/me/entry">${s.myEntry}</a>` : ""}
   <a href="/rules">${s.rules}</a>
   ${user?.isAdmin ? html`<a href="/admin">Admin</a>` : ""}

@@ -18,7 +18,7 @@ test("landing shows the opening date and the rules in the viewer's language", as
 test("/rules is available in every phase and linked from the gallery", async () => {
   const ctx = setup();
   assert.match(await page(ctx, "/rules", "en"), /How it works/);
-  assert.match(await page(ctx, "/", "en"), /href="\/rules"/);
+  assert.match(await page(ctx, "/gallery", "en"), /href="\/rules"/);
 });
 
 test("missing content file still renders the page", async () => {

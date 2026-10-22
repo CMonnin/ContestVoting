@@ -6,7 +6,7 @@ import { addEntry, login, post, setup } from "./helpers.ts";
 
 const ORIGIN = "https://halloween.test";
 const home = async (ctx: ReturnType<typeof setup>, cookie = "did=viewer-aaaaaaaaaaaaaaaa") =>
-  (await ctx.app.request(`${ORIGIN}/`, { headers: { cookie } })).text();
+  (await ctx.app.request(`${ORIGIN}/gallery`, { headers: { cookie } })).text();
 
 test("gallery shows approved entries only, never owner emails", async () => {
   const ctx = setup();
@@ -22,7 +22,9 @@ test("gallery shows approved entries only, never owner emails", async () => {
 test("gallery stays hidden during landing", async () => {
   const ctx = setup("2026-10-21T12:00:00Z");
   addEntry(ctx, "a@mcgill.ca", "Early Approved", "approved");
-  assert.doesNotMatch(await home(ctx), /Early Approved/);
+  const res = await ctx.app.request(`${ORIGIN}/gallery`);
+  assert.equal(res.headers.get("location"), "/");
+  assert.doesNotMatch(await (await ctx.app.request(`${ORIGIN}/`)).text(), /Early Approved/);
 });
 
 test("order is stable per viewer and differs across viewers", async () => {
@@ -56,7 +58,7 @@ test("vote flow: anonymous is sent to login; vote, see it marked, change it", as
 
   const cookie = await login(ctx, "voter@mcgill.ca");
   const res = await vote(ctx, cookie, a);
-  assert.equal(res.headers.get("location"), `/?voted=1#e${a}`);
+  assert.equal(res.headers.get("location"), `/gallery?voted=1#e${a}`);
   const page = await home(ctx, cookie);
   assert.match(page, new RegExp(`id="e${a}"[\\s\\S]*?(Your vote|Votre vote)[\\s\\S]*?</article>`));
 
@@ -86,12 +88,12 @@ test("voting refused after close and for unapproved entries; counts never shown 
   const p = addEntry(ctx, "p@mcgill.ca", "Pending", "pending").id;
   const cookie = await login(ctx, "voter@mcgill.ca");
 
-  assert.equal((await vote(ctx, cookie, p)).headers.get("location"), "/?e=not_votable");
+  assert.equal((await vote(ctx, cookie, p)).headers.get("location"), "/gallery?e=not_votable");
   await vote(ctx, cookie, a);
   assert.doesNotMatch(await home(ctx, cookie), /\b1 vote|\(1\)/);
 
   ctx.clock.now = new Date("2026-10-30T20:30:00Z"); // 16:30 → closed
-  assert.equal((await vote(ctx, cookie, a)).headers.get("location"), "/?e=voting_closed");
+  assert.equal((await vote(ctx, cookie, a)).headers.get("location"), "/gallery?e=voting_closed");
   const closed = await home(ctx, cookie);
   assert.doesNotMatch(closed, /action="\/vote"/);
 });

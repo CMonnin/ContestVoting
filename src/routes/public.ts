@@ -22,11 +22,15 @@ export function publicRoutes(app: App, { deps, cookieOpts, phaseNow, render }: R
 
   app.get("/", (c) => {
     const lang = c.get("lang");
+    if (phaseNow() !== "landing") return c.redirect("/gallery");
+    return render(c, landingPage(lang, formatDateTime(cfg.openAt, lang, cfg.tz), loadRules(cfg.contentDir, lang)));
+  });
+
+  app.get("/gallery", (c) => {
+    const lang = c.get("lang");
     const s = t(lang);
     const phase = phaseNow();
-    if (phase === "landing") {
-      return render(c, landingPage(lang, formatDateTime(cfg.openAt, lang, cfg.tz), loadRules(cfg.contentDir, lang)));
-    }
+    if (phase === "landing") return c.redirect("/");
     const text = { open: s.phaseOpen, voting: s.phaseVoting, closed: s.phaseClosed, results: s.phaseResults }[phase];
     const user = c.get("user");
     const entries = seededShuffle(listApproved(db), c.get("deviceId"));
@@ -58,7 +62,7 @@ export function publicRoutes(app: App, { deps, cookieOpts, phaseNow, render }: R
       ua: c.req.header("user-agent") ?? "",
       now: deps.now().getTime(),
     });
-    return c.redirect(res.ok ? `/?voted=1#e${entryId}` : `/?e=${res.reason}`);
+    return c.redirect(res.ok ? `/gallery?voted=1#e${entryId}` : `/gallery?e=${res.reason}`);
   });
 
   app.get("/rules", (c) => render(c, rulesPage(c.get("lang"), loadRules(cfg.contentDir, c.get("lang")))));

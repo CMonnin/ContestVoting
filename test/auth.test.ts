@@ -23,10 +23,10 @@ test("happy path: code by email, verify, session cookie, logged-in page", async 
   const { res, sid } = await login(ctx, "alice@mcgill.ca");
   assert.equal(res.status, 302);
   assert.ok(sid);
-  const home = await ctx.app.request("https://halloween.test/", { headers: { cookie: `sid=${sid}` } });
+  const home = await ctx.app.request("https://halloween.test/gallery", { headers: { cookie: `sid=${sid}` } });
   const page = await home.text();
   assert.match(page, /alice@mcgill\.ca/);
-  for (const href of ["/", "/me/entry", "/rules"]) assert.match(page, new RegExp(`<nav class="main">[\\s\\S]*href="${href}"`));
+  for (const href of ["/gallery", "/me/entry", "/rules"]) assert.match(page, new RegExp(`<nav class="main">[\\s\\S]*href="${href}"`));
   assert.doesNotMatch(page, /href="\/admin"/, "admin link only for admins");
 });
 
@@ -110,7 +110,7 @@ test("logout ends the session", async () => {
   const ctx = setup();
   const { sid } = await login(ctx, "gail@mcgill.ca");
   await ctx.app.request(post("/logout", {}, { cookie: `sid=${sid}` }));
-  const home = await ctx.app.request("https://halloween.test/", { headers: { cookie: `sid=${sid}` } });
+  const home = await ctx.app.request("https://halloween.test/gallery", { headers: { cookie: `sid=${sid}` } });
   assert.doesNotMatch(await home.text(), /gail@mcgill\.ca/);
 });
 
