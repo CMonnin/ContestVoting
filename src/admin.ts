@@ -1,6 +1,6 @@
 import type { AuthDeps } from "./auth.ts";
 import { getSetting, setSetting, type Db } from "./db.ts";
-import type { EntryStatus } from "./entries.ts";
+import type { Category, EntryStatus } from "./entries.ts";
 import { adminAlertEmail, rejectionEmail } from "./mail.ts";
 
 export const REASON_MAX = 200;
@@ -29,6 +29,7 @@ export type AdminEntry = {
   id: number;
   ownerEmail: string;
   name: string;
+  category: Category;
   caption: string;
   status: EntryStatus;
   rejectReason: string | null;
@@ -41,7 +42,7 @@ export type AdminEntry = {
 export function listEntries(db: Db, status?: EntryStatus): AdminEntry[] {
   const rows = db
     .prepare(
-      `SELECT e.id, e.owner_email, e.name, e.caption, e.status, e.reject_reason, e.updated_at,
+      `SELECT e.id, e.owner_email, e.name, e.category, e.caption, e.status, e.reject_reason, e.updated_at,
               (SELECT COUNT(*) FROM votes v WHERE v.entry_id = e.id) AS votes
          FROM entries e ${status ? "WHERE e.status = ?" : ""}
         ORDER BY e.updated_at ASC`,
@@ -50,6 +51,7 @@ export function listEntries(db: Db, status?: EntryStatus): AdminEntry[] {
     id: number;
     owner_email: string;
     name: string;
+    category: Category;
     caption: string;
     status: EntryStatus;
     reject_reason: string | null;
@@ -63,6 +65,7 @@ export function listEntries(db: Db, status?: EntryStatus): AdminEntry[] {
       id: r.id,
       ownerEmail: r.owner_email,
       name: r.name,
+      category: r.category,
       caption: r.caption,
       status: r.status,
       rejectReason: r.reject_reason,

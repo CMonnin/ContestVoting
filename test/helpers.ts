@@ -62,14 +62,14 @@ export const post = (path: string, fields: Record<string, string>, headers: Reco
 
 let photoSeq = 0;
 /** Insert an entry directly (upload path is covered in entries.test.ts). */
-export function addEntry(ctx: Ctx, owner: string, name: string, status = "pending") {
+export function addEntry(ctx: Ctx, owner: string, name: string, status = "pending", category = "individual") {
   const now = ctx.clock.now.getTime();
   const id = Number(
     ctx.db
       .prepare(
-        "INSERT INTO entries (owner_email, name, caption, status, consent_at, created_at, updated_at) VALUES (?, ?, '', ?, ?, ?, ?)",
+        "INSERT INTO entries (owner_email, name, category, caption, status, consent_at, created_at, updated_at) VALUES (?, ?, ?, '', ?, ?, ?, ?)",
       )
-      .run(owner, name, status, now, now, now).lastInsertRowid,
+      .run(owner, name, category, status, now, now, now).lastInsertRowid,
   );
   const base = String(++photoSeq).padStart(32, "0");
   const photo = { file: `${base}.webp`, thumb: `${base}_t.webp` };

@@ -6,10 +6,15 @@ export const CAPTION_MAX = 200;
 
 export type EntryStatus = "pending" | "approved" | "rejected";
 
+export const CATEGORIES = ["individual", "group"] as const;
+export type Category = (typeof CATEGORIES)[number];
+export const isCategory = (v: unknown): v is Category => CATEGORIES.includes(v as Category);
+
 export type Entry = {
   id: number;
   ownerEmail: string;
   name: string;
+  category: Category;
   caption: string;
   status: EntryStatus;
   rejectReason: string | null;
@@ -22,6 +27,7 @@ type EntryRow = {
   id: number;
   owner_email: string;
   name: string;
+  category: Category;
   caption: string;
   status: EntryStatus;
   reject_reason: string | null;
@@ -29,11 +35,12 @@ type EntryRow = {
   updated_at: number;
 };
 
-export type FieldError = "name_required" | "name_too_long" | "caption_too_long" | "consent_required";
+export type FieldError = "name_required" | "name_too_long" | "category_required" | "caption_too_long" | "consent_required";
 
-export function validateFields(name: string, caption: string, consent: boolean): FieldError | null {
+export function validateFields(name: string, category: string, caption: string, consent: boolean): FieldError | null {
   if (!name) return "name_required";
   if ([...name].length > NAME_MAX) return "name_too_long";
+  if (!isCategory(category)) return "category_required";
   if ([...caption].length > CAPTION_MAX) return "caption_too_long";
   if (!consent) return "consent_required";
   return null;
@@ -48,6 +55,7 @@ function toEntry(db: Db, row: EntryRow): Entry {
     id: row.id,
     ownerEmail: row.owner_email,
     name: row.name,
+    category: row.category,
     caption: row.caption,
     status: row.status,
     rejectReason: row.reject_reason,
@@ -81,7 +89,7 @@ function tx<T>(db: Db, fn: () => T): T {
  */
 export function saveEntry(
   db: Db,
-  input: { owner: string; name: string; caption: string; photos: StoredPhoto[] | null; now: number },
+  input: { owner: string; name: string; category: Category; caption: string; photos: StoredPhoto[] | null; now: number },
 ): { entry: Entry; replaced: StoredPhoto[] } {
   return tx(db, () => {
     const existing = db.prepare("SELECT id FROM entries WHERE owner_email = ?").get(input.owner) as
@@ -92,8 +100,8 @@ export function saveEntry(
     if (existing) {
       id = existing.id;
       db.prepare(
-        "UPDATE entries SET name = ?, caption = ?, status = 'pending', reject_reason = NULL, consent_at = ?, updated_at = ? WHERE id = ?",
-      ).run(input.name, input.caption, input.now, input.now, id);
+        "UPDATE entries SET name = ?, category = ?, caption = ?, status = 'pending', reject_reason = NULL, consent_at = ?, updated_at = ? WHERE id = ?",
+      ).run(input.name, input.category, input.caption, input.now, input.now, id);
       if (input.photos) {
         replaced = photosOf(db, id);
         db.prepare("DELETE FROM photos WHERE entry_id = ?").run(id);
@@ -103,9 +111,9 @@ export function saveEntry(
       id = Number(
         db
           .prepare(
-            "INSERT INTO entries (owner_email, name, caption, status, consent_at, created_at, updated_at) VALUES (?, ?, ?, 'pending', ?, ?, ?)",
+            "INSERT INTO entries (owner_email, name, category, caption, status, consent_at, created_at, updated_at) VALUES (?, ?, ?, ?, 'pending', ?, ?, ?)",
           )
-          .run(input.owner, input.name, input.caption, input.now, input.now, input.now).lastInsertRowid,
+          .run(input.owner, input.name, input.category, input.caption, input.now, input.now, input.now).lastInsertRowid,
       );
     }
     input.photos?.forEach((p, i) =>
@@ -116,13 +124,14 @@ export function saveEntry(
   });
 }
 
-export type GalleryEntry = { id: number; name: string; caption: string; photos: StoredPhoto[] };
+export type GalleryEntry = { id: number; name: string; category: Category; caption: string; photos: StoredPhoto[] };
 
 /** Approved entries only, with their photos. Never exposes the owner. */
 export function listApproved(db: Db): GalleryEntry[] {
-  const rows = db.prepare("SELECT id, name, caption FROM entries WHERE status = 'approved'").all() as {
+  const rows = db.prepare("SELECT id, name, category, caption FROM entries WHERE status = 'approved'").all() as {
     id: number;
     name: string;
+    category: Category;
     caption: string;
   }[];
   return rows.map((r) => ({ ...r, photos: photosOf(db, r.id) })).filter((e) => e.photos.length > 0);

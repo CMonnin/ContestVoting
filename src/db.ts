@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS entries (
   id            INTEGER PRIMARY KEY,
   owner_email   TEXT NOT NULL UNIQUE,
   name          TEXT NOT NULL,
+  category      TEXT NOT NULL CHECK (category IN ('individual', 'group')),
   caption       TEXT NOT NULL DEFAULT '',
   status        TEXT NOT NULL CHECK (status IN ('pending', 'approved', 'rejected')),
   reject_reason TEXT,

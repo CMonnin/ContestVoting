@@ -2,7 +2,7 @@ import { html } from "hono/html";
 import type { HtmlEscapedString } from "hono/utils/html";
 import type { AdminEntry, AuditVote, LogRow, Ranked, Results } from "./admin.ts";
 import { fill, ta, type AdminError, type AdminNotice } from "./adminI18n.ts";
-import type { Lang } from "./i18n.ts";
+import { t, type Lang } from "./i18n.ts";
 import { PHASES, type Phase } from "./phase.ts";
 
 type Body = HtmlEscapedString | Promise<HtmlEscapedString>;
@@ -36,7 +36,7 @@ export function queuePage(lang: Lang, entries: AdminEntry[], flash: Flash, fmt: 
           (e) => html`<div class="panel">
   <h2>${e.name}</h2>
   ${e.caption ? html`<p>${e.caption}</p>` : ""}
-  <p class="help">${e.ownerEmail} · ${fmt(e.updatedAt)}</p>
+  <p class="help">${t(lang).categories[e.category]} · ${e.ownerEmail} · ${fmt(e.updatedAt)}</p>
   ${thumbs(e.files, e.thumbs)}
   <form method="post" action="/admin/entries/${e.id}/approve"><button type="submit">${a.approve}</button></form>
   <form method="post" action="/admin/entries/${e.id}/reject">
@@ -61,7 +61,7 @@ export function entriesPage(lang: Lang, entries: AdminEntry[], flash: Flash): Bo
           (e) => html`<div class="panel">
   <p><span class="badge ${e.status}">${a.status[e.status]}</span> · ${a.votes}: ${e.votes}</p>
   <h2>${e.name}</h2>
-  <p class="help">${e.ownerEmail}${e.rejectReason ? html` · ${e.rejectReason}` : ""}</p>
+  <p class="help">${t(lang).categories[e.category]} · ${e.ownerEmail}${e.rejectReason ? html` · ${e.rejectReason}` : ""}</p>
   ${thumbs(e.files, e.thumbs)}
   ${e.status !== "approved"
     ? html`<form method="post" action="/admin/entries/${e.id}/approve"><button type="submit">${a.approve}</button></form>`

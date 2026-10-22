@@ -2,7 +2,7 @@ import { html, raw } from "hono/html";
 import type { HtmlEscapedString } from "hono/utils/html";
 import type { User } from "./auth.ts";
 import type { Results } from "./admin.ts";
-import type { Entry, GalleryEntry } from "./entries.ts";
+import { CATEGORIES, type Entry, type GalleryEntry } from "./entries.ts";
 import { t, type Lang } from "./i18n.ts";
 
 type Body = HtmlEscapedString | Promise<HtmlEscapedString>;
@@ -29,6 +29,8 @@ textarea { width:100%; font:inherit; padding:12px; border-radius:8px; border:1px
 input[type=file] { font-size:1rem; padding:10px; }
 label.check { display:flex; gap:10px; align-items:flex-start; font-weight:400; }
 label.check input { width:auto; margin-top:4px; }
+fieldset { border:0; padding:0; margin:14px 0 0; }
+legend { font-weight:600; padding:0; }
 button.danger { background:transparent; color:var(--danger); border:1px solid var(--danger); }
 .notice { background:#1f3a1f; color:#c8f0c8; padding:12px; border-radius:8px; }
 .badge { display:inline-block; padding:4px 10px; border-radius:999px; font-weight:700; font-size:.9rem; }
@@ -156,7 +158,7 @@ ${opts.entries.length === 0
       )}</div>`}`;
 }
 
-export type EntryFormValues = { name: string; caption: string };
+export type EntryFormValues = { name: string; category: string; caption: string };
 
 export function entryPage(
   lang: Lang,
@@ -171,7 +173,7 @@ export function entryPage(
 ): Body {
   const s = t(lang);
   const { entry } = opts;
-  const values = opts.values ?? { name: entry?.name ?? "", caption: entry?.caption ?? "" };
+  const values = opts.values ?? { name: entry?.name ?? "", category: entry?.category ?? "", caption: entry?.caption ?? "" };
   return html`<h1>${s.myEntry}</h1>
 ${opts.notice ? html`<p class="notice" role="status">${opts.notice}</p>` : ""}
 ${entry
@@ -181,6 +183,7 @@ ${entry
     ? html`${entry.rejectReason ? html`<p>${s.rejectReason} ${entry.rejectReason}</p>` : ""}<p class="help">${s.rejectedHelp}</p>`
     : ""}
   <h2>${entry.name}</h2>
+  <p class="help">${s.categories[entry.category]}</p>
   ${entry.caption ? html`<p>${entry.caption}</p>` : ""}
   <div class="thumbs">${entry.photos.map((p) => html`<a href="/photos/${p.file}"><img src="/photos/${p.thumb}" alt=""></a>`)}</div>
 </div>`
@@ -190,6 +193,12 @@ ${opts.canEdit
   ${entry ? html`<p class="help">${s.editNote}</p>` : ""}
   <label for="name">${s.nameLabel}</label>
   <input id="name" name="name" maxlength="60" required value="${values.name}">
+  <fieldset>
+    <legend>${s.categoryLabel}</legend>
+    ${CATEGORIES.map(
+      (c) => html`<label class="check"><input type="radio" name="category" value="${c}" required ${values.category === c ? "checked" : ""}> ${s.categories[c]}</label>`,
+    )}
+  </fieldset>
   <label for="caption">${s.captionLabel}</label>
   <textarea id="caption" name="caption" maxlength="200" rows="3">${values.caption}</textarea>
   <label for="photos">${s.photosLabel}</label>

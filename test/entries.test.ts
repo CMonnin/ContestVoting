@@ -48,7 +48,7 @@ const formPost = (ctx: Ctx, path: string, cookie: string, fields: Record<string,
 
 const get = (ctx: Ctx, path: string, cookie = "") => ctx.app.request(`${ORIGIN}${path}`, { headers: { cookie } });
 
-const valid = { name: "Zombie Lab", caption: "Braaains", consent: "1" };
+const valid = { name: "Zombie Lab", category: "group", caption: "Braaains", consent: "1" };
 const photoFiles = (ctx: Ctx) => readdirSync(ctx.photosDir);
 
 test("entry pages need login", async () => {
@@ -68,6 +68,7 @@ test("submit: photos resized to WebP, metadata stripped, entry pending", async (
   const entry = getEntryByOwner(ctx.db, "alice@mcgill.ca")!;
   assert.equal(entry.status, "pending");
   assert.equal(entry.name, "Zombie Lab");
+  assert.equal(entry.category, "group");
   assert.equal(entry.photos.length, 2);
   assert.equal(photoFiles(ctx).length, 4);
 
@@ -81,6 +82,8 @@ test("submit: photos resized to WebP, metadata stripped, entry pending", async (
   const page = await (await get(ctx, "/me/entry?saved=1", cookie)).text();
   assert.match(page, /Zombie Lab/);
   assert.match(page, /badge pending/);
+  assert.match(page, /<p class="help">(Group|Groupe)<\/p>/);
+  assert.match(page, /value="group" required checked/);
 });
 
 test("validation errors save nothing", async () => {
@@ -92,6 +95,8 @@ test("validation errors save nothing", async () => {
     [valid, [], /at least one photo|au moins une photo/],
     [valid, [img, img, img, img], /Three photos|Trois photos/],
     [{ ...valid, name: "x".repeat(61) }, [img], /60/],
+    [{ ...valid, category: "" }, [img], /category|catégorie/],
+    [{ ...valid, category: "team" }, [img], /category|catégorie/],
     [{ ...valid, caption: "x".repeat(201) }, [img], /200/],
     [valid, [{ bytes: Buffer.from("not an image"), name: "x.jpg" }], /Unsupported|non pris en charge/],
     [valid, [img, { bytes: heicBytes(), name: "IMG_1.HEIC", type: "image/heic" }], /HEIC/],
@@ -113,9 +118,10 @@ test("edit without photos keeps them; edit with photos replaces and deletes old 
   const first = getEntryByOwner(ctx.db, "carol@mcgill.ca")!;
   ctx.db.prepare("UPDATE entries SET status = 'approved' WHERE id = ?").run(first.id);
 
-  await submit(ctx, cookie, { ...valid, name: "Renamed" }, []);
+  await submit(ctx, cookie, { ...valid, name: "Renamed", category: "individual" }, []);
   const second = getEntryByOwner(ctx.db, "carol@mcgill.ca")!;
   assert.equal(second.name, "Renamed");
+  assert.equal(second.category, "individual");
   assert.equal(second.status, "pending");
   assert.deepEqual(second.photos, first.photos);
 

@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { bodyLimit } from "hono/body-limit";
-import { deleteEntry, getEntryByOwner, photoOwner, saveEntry, validateFields } from "../entries.ts";
+import { deleteEntry, getEntryByOwner, photoOwner, saveEntry, validateFields, type Category } from "../entries.ts";
 import { errorText, t, type ErrorKey } from "../i18n.ts";
 import type { Phase } from "../phase.ts";
 import { deletePhotoFiles, isPhotoName, MAX_PHOTO_BYTES, MAX_PHOTOS, processPhoto, storePhoto } from "../photos.ts";
@@ -30,7 +30,11 @@ export function entryRoutes(app: App, { deps, photosDir, phaseNow, render }: Rou
     const phase = phaseNow();
     const entry = getEntryByOwner(db, owner);
     const form = await c.req.parseBody({ all: true });
-    const values = { name: String(form.name ?? "").trim(), caption: String(form.caption ?? "").trim() };
+    const values = {
+      name: String(form.name ?? "").trim(),
+      category: String(form.category ?? ""),
+      caption: String(form.caption ?? "").trim(),
+    };
     const fail = (key: ErrorKey) =>
       render(
         c,
@@ -39,7 +43,7 @@ export function entryRoutes(app: App, { deps, photosDir, phaseNow, render }: Rou
       );
 
     if (!canEdit(phase)) return fail("submissions_closed");
-    const fieldError = validateFields(values.name, values.caption, form.consent === "1");
+    const fieldError = validateFields(values.name, values.category, values.caption, form.consent === "1");
     if (fieldError) return fail(fieldError);
 
     const files = [form.photos].flat().filter((f): f is File => f instanceof File && f.size > 0);
@@ -59,6 +63,7 @@ export function entryRoutes(app: App, { deps, photosDir, phaseNow, render }: Rou
     const { replaced } = saveEntry(db, {
       owner,
       name: values.name,
+      category: values.category as Category,
       caption: values.caption,
       photos: stored.length ? stored : null,
       now: deps.now().getTime(),

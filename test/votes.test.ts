@@ -8,7 +8,7 @@ function db() {
   const add = (owner: string, status: string) =>
     Number(
       d
-        .prepare("INSERT INTO entries (owner_email, name, status, consent_at, created_at, updated_at) VALUES (?, ?, ?, 0, 0, 0)")
+        .prepare("INSERT INTO entries (owner_email, name, category, status, consent_at, created_at, updated_at) VALUES (?, ?, 'individual', ?, 0, 0, 0)")
         .run(owner, owner, status).lastInsertRowid,
     );
   return { d, approved: add("a@x", "approved"), other: add("b@x", "approved"), pending: add("c@x", "pending") };

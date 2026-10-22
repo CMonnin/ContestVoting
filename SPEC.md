@@ -43,7 +43,7 @@ Times live in config (`.env`), not code.
 ## 4. Entries
 
 - One entry per email (team captains submit for teams).
-- Fields: costume/team name (≤ 60 chars), caption (≤ 200 chars), 1–3 photos, required consent checkbox (text in §8).
+- Fields: costume/team name (≤ 60 chars), category (individual | group, as on the landing page), caption (≤ 200 chars), 1–3 photos, required consent checkbox (text in §8).
 - Status: `pending` → `approved` | `rejected` (with an optional reason). Any edit → back to `pending`.
 - Withdraw = hard delete of the entry, its photos and its votes.
 - Rejected → email to the submitter with the reason (FR + EN), and the status page shows it. They can edit and resubmit.
@@ -132,7 +132,7 @@ users        (email PK, lang, created_at)
 otp_codes    (email PK, code_hash, expires_at, attempts, sent_at)
 otp_sends    (email, ip, sent_at)                -- rate limiting
 sessions     (token_hash PK, email, device_id, ip, ua, expires_at)
-entries      (id PK, owner_email UNIQUE, name, caption, status,
+entries      (id PK, owner_email UNIQUE, name, category, caption, status,
               reject_reason, consent_at, created_at, updated_at)
 photos       (id PK, entry_id FK, position, file, thumb)
 votes        (voter_email PK, entry_id FK, device_id, ip, ua, updated_at)
