@@ -41,6 +41,8 @@ button.danger { background:transparent; color:var(--danger); border:1px solid va
 .badge.rejected { background:#4a1717; color:#ff9e9e; }
 .thumbs { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:12px; }
 .thumbs img { width:100%; aspect-ratio:1; object-fit:cover; border-radius:8px; display:block; }
+nav.main { display:flex; gap:8px; flex-wrap:wrap; margin:12px 0 0; }
+nav.main a { background:var(--panel); color:var(--text); text-decoration:none; padding:8px 14px; border-radius:999px; font-weight:600; }
 nav.admin { display:flex; gap:16px; flex-wrap:wrap; margin:16px 0; }
 nav.admin a { color:var(--muted); }
 nav.admin a.current { color:var(--accent); font-weight:700; }
@@ -77,7 +79,7 @@ export function layout(lang: Lang, user: User | null, body: Body): Body {
 <body>
 <div class="wrap">
 <header>
-  <span><a href="/lang/${other}">${s.switchLang}</a>${user?.isAdmin ? html` · <a href="/admin">Admin</a>` : ""}</span>
+  <a href="/lang/${other}">${s.switchLang}</a>
   ${user
     ? html`<form method="post" action="/logout" style="margin:0">
         <span class="help">${s.loggedInAs} ${user.email}</span>
@@ -85,6 +87,13 @@ export function layout(lang: Lang, user: User | null, body: Body): Body {
       </form>`
     : ""}
 </header>
+<nav class="main">
+  <a href="/">${s.gallery}</a>
+  ${user ? html`<a href="/me/entry">${s.myEntry}</a>` : ""}
+  <a href="/rules">${s.rules}</a>
+  ${user?.isAdmin ? html`<a href="/admin">Admin</a>` : ""}
+  ${user ? "" : html`<a href="/login">${s.login}</a>`}
+</nav>
 ${body}
 <footer>🎃 ${s.poweredBy}</footer>
 </div>

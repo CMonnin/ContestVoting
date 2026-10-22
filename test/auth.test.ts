@@ -24,7 +24,10 @@ test("happy path: code by email, verify, session cookie, logged-in page", async 
   assert.equal(res.status, 302);
   assert.ok(sid);
   const home = await ctx.app.request("https://halloween.test/", { headers: { cookie: `sid=${sid}` } });
-  assert.match(await home.text(), /alice@mcgill\.ca/);
+  const page = await home.text();
+  assert.match(page, /alice@mcgill\.ca/);
+  for (const href of ["/", "/me/entry", "/rules"]) assert.match(page, new RegExp(`<nav class="main">[\\s\\S]*href="${href}"`));
+  assert.doesNotMatch(page, /href="\/admin"/, "admin link only for admins");
 });
 
 test("rejects non-institutional domains and lookalikes", async () => {
