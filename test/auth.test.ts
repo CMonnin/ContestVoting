@@ -150,3 +150,17 @@ test("admin-issued code follows the domain rules", () => {
   assert.deepEqual(issueCode(ctx.deps, "bob@gmail.com"), { ok: false, reason: "domain" });
   assert.deepEqual(issueCode(ctx.deps, "nope"), { ok: false, reason: "invalid_email" });
 });
+
+test("\"already have a code\": code screen without sending an email", async () => {
+  const ctx = setup();
+  const login = await (await ctx.app.request("https://halloween.test/login")).text();
+  assert.match(login, /href="\/login\/verify"/);
+  const page = await (await ctx.app.request("https://halloween.test/login/verify")).text();
+  assert.match(page, /<input id="email" name="email" type="email"/);
+  assert.match(page, /name="code"/);
+  assert.equal(ctx.sent.length, 0);
+
+  const { code } = issueCode(ctx.deps, "ivy@mcgill.ca") as { code: string };
+  const res = await ctx.app.request(post("/login/verify", { email: "ivy@mcgill.ca", code }));
+  assert.equal(res.status, 302);
+});

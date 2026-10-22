@@ -20,6 +20,8 @@ export function authRoutes(app: App, { deps, cookieOpts, phaseNow, render }: Rou
     return render(c, loginPage(lang, { email, error: msg }), status);
   });
 
+  app.get("/login/verify", (c) => (c.get("user") ? c.redirect("/") : render(c, verifyPage(c.get("lang"), null))));
+
   app.post("/login/verify", async (c) => {
     const lang = c.get("lang");
     const form = await c.req.parseBody();

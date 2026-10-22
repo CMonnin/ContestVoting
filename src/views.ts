@@ -241,25 +241,32 @@ export function loginPage(lang: Lang, opts: { email?: string; error?: string } =
   <p class="help">${s.emailHelp}</p>
   ${opts.error ? html`<p class="error" role="alert">${opts.error}</p>` : ""}
   <button type="submit">${s.sendCode}</button>
-</form>`;
+</form>
+<p style="text-align:center"><a class="help" href="/login/verify">${s.haveCode}</a></p>`;
 }
 
-export function verifyPage(lang: Lang, email: string, error?: string): Body {
+/** `email` null: the person already has a code (e.g. from an admin) and types their email here. */
+export function verifyPage(lang: Lang, email: string | null, error?: string): Body {
   const s = t(lang);
   return html`<h1>${s.login}</h1>
 <form class="panel" method="post" action="/login/verify">
-  <p>${s.codeSentTo} <strong>${email}</strong></p>
+  ${email
+    ? html`<p>${s.codeSentTo} <strong>${email}</strong></p>
   <p class="notice warn">📬 ${raw(s.junkHint)}</p>
-  <input type="hidden" name="email" value="${email}">
+  <input type="hidden" name="email" value="${email}">`
+    : html`<label for="email">${s.emailLabel}</label>
+  <input id="email" name="email" type="email" inputmode="email" autocomplete="email" required>`}
   <label for="code">${s.codeLabel}</label>
   <input id="code" class="code" name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9 ]*" maxlength="7" required autofocus>
   <p class="help">${s.codeHelp}</p>
   ${error ? html`<p class="error" role="alert">${error}</p>` : ""}
   <button type="submit">${s.verify}</button>
 </form>
-<form method="post" action="/login" style="text-align:center">
+${email
+    ? html`<form method="post" action="/login" style="text-align:center">
   <input type="hidden" name="email" value="${email}">
   <button class="link" type="submit">${s.resend}</button>
   <a class="help" href="/login">${s.otherEmail}</a>
-</form>`;
+</form>`
+    : html`<p style="text-align:center"><a class="help" href="/login">${s.sendCode}</a></p>`}`;
 }
