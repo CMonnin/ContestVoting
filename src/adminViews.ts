@@ -7,7 +7,7 @@ import { t, type Lang } from "./i18n.ts";
 import { PHASES, type Phase } from "./phase.ts";
 
 type Body = HtmlEscapedString | Promise<HtmlEscapedString>;
-type Section = "queue" | "entries" | "votes" | "settings";
+type Section = "queue" | "entries" | "votes" | "code" | "settings";
 export type Flash = { notice?: AdminNotice; error?: AdminError };
 
 function frame(lang: Lang, current: Section, flash: Flash, body: Body): Body {
@@ -15,7 +15,7 @@ function frame(lang: Lang, current: Section, flash: Flash, body: Body): Body {
   const link = (s: Section, href: string) =>
     html`<a href="${href}" class="${s === current ? "current" : ""}">${a.nav[s]}</a>`;
   return html`<nav class="admin">
-  ${link("queue", "/admin")} ${link("entries", "/admin/entries")} ${link("votes", "/admin/votes")} ${link("settings", "/admin/settings")}
+  ${link("queue", "/admin")} ${link("entries", "/admin/entries")} ${link("votes", "/admin/votes")} ${link("code", "/admin/code")} ${link("settings", "/admin/settings")}
 </nav>
 ${flash.notice ? html`<p class="notice" role="status">${a.notice[flash.notice]}</p>` : ""}
 ${flash.error ? html`<p class="error" role="alert">${a.err[flash.error]}</p>` : ""}
@@ -113,6 +113,33 @@ export function votesPage(lang: Lang, ranked: Rankings, votes: AuditVote[], flas
   )}
 </table>`}
 </div>`,
+  );
+}
+
+export function codePage(
+  lang: Lang,
+  flash: Flash,
+  issued?: { email: string; code: string; expires: string },
+): Body {
+  const a = ta(lang);
+  return frame(
+    lang,
+    "code",
+    flash,
+    html`${issued
+      ? html`<div class="panel winners">
+  <h2>${fill(a.codeFor, { email: issued.email })}</h2>
+  <p class="code-big">${issued.code.slice(0, 3)} ${issued.code.slice(3)}</p>
+  <p>${fill(a.codeExpires, { time: issued.expires })}</p>
+  <p class="help">${a.codeSteps}</p>
+</div>`
+      : ""}
+<form class="panel" method="post" action="/admin/code">
+  <p class="help">${a.codeIntro}</p>
+  <label for="email">${a.codeEmail}</label>
+  <input id="email" name="email" type="email" inputmode="email" autocomplete="off" required>
+  <button type="submit">${a.codeIssue}</button>
+</form>`,
   );
 }
 

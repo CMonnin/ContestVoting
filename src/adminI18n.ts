@@ -2,7 +2,13 @@ import type { Lang } from "./i18n.ts";
 
 const strings = {
   fr: {
-    nav: { queue: "À approuver", entries: "Inscriptions", votes: "Votes", settings: "Réglages" },
+    nav: { queue: "À approuver", entries: "Inscriptions", votes: "Votes", code: "Code de secours", settings: "Réglages" },
+    codeIntro: "Pour une personne devant vous dont le code par courriel n'arrive pas (filtre anti-pourriel). Vérifiez que c'est bien elle.",
+    codeEmail: "Son courriel institutionnel",
+    codeIssue: "Générer un code",
+    codeFor: "Code pour {email}",
+    codeExpires: "Valide jusqu'à {time}, une seule fois.",
+    codeSteps: "Dites-lui : ouvrir le site → Se connecter → « J'ai déjà un code » → entrer son courriel et ce code.",
     queueEmpty: "Rien à approuver pour l'instant.",
     approve: "Approuver",
     reject: "Refuser",
@@ -49,6 +55,8 @@ const strings = {
     },
     err: {
       not_found: "Introuvable (déjà traité par un autre admin ?).",
+      invalid_email: "Ce courriel ne semble pas valide.",
+      domain: "Domaine non autorisé. Ajoutez-le dans Réglages si besoin.",
       invalid_domains: "Domaine invalide.",
       invalid_results: "Choisissez des inscriptions différentes.",
       voting_open: "Le vote n'est pas terminé.",
@@ -56,7 +64,13 @@ const strings = {
     },
   },
   en: {
-    nav: { queue: "To review", entries: "Entries", votes: "Votes", settings: "Settings" },
+    nav: { queue: "To review", entries: "Entries", votes: "Votes", code: "Backup code", settings: "Settings" },
+    codeIntro: "For someone in front of you whose emailed code isn't arriving (junk filter). Check it's really them.",
+    codeEmail: "Their institutional email",
+    codeIssue: "Generate a code",
+    codeFor: "Code for {email}",
+    codeExpires: "Valid until {time}, once.",
+    codeSteps: "Tell them: open the site → Log in → “I already have a code” → enter their email and this code.",
     queueEmpty: "Nothing to review right now.",
     approve: "Approve",
     reject: "Reject",
@@ -103,6 +117,8 @@ const strings = {
     },
     err: {
       not_found: "Not found (already handled by another admin?).",
+      invalid_email: "That email doesn't look valid.",
+      domain: "Domain not allowed. Add it in Settings if needed.",
       invalid_domains: "Invalid domain.",
       invalid_results: "Pick different entries.",
       voting_open: "Voting hasn't finished.",

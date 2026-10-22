@@ -14,7 +14,8 @@ import {
   voteAudit,
 } from "../admin.ts";
 import { ta, type AdminError, type AdminNotice } from "../adminI18n.ts";
-import { entriesPage, queuePage, settingsPage, votesPage, type Flash } from "../adminViews.ts";
+import { issueCode } from "../auth.ts";
+import { codePage, entriesPage, queuePage, settingsPage, votesPage, type Flash } from "../adminViews.ts";
 import { getSetting, setSetting } from "../db.ts";
 import { CATEGORIES, deleteEntry, type Category } from "../entries.ts";
 import type { Lang } from "../i18n.ts";
@@ -99,6 +100,19 @@ export function adminRoutes(app: App, { deps, photosDir, phaseNow, render }: Rou
     const form = await c.req.parseBody();
     const ok = voidVote(deps, admin(c), String(form.voter ?? ""), String(form.category ?? ""));
     return back(c, ok ? { n: "voided" } : { e: "not_found" }, "/admin/votes");
+  });
+
+  app.get("/admin/code", (c) => render(c, codePage(c.get("lang"), flashOf(c))));
+
+  // Rendered directly, never redirected: the code must not end up in a URL or history.
+  app.post("/admin/code", async (c) => {
+    const lang = c.get("lang");
+    const form = await c.req.parseBody();
+    const res = issueCode(deps, String(form.email ?? ""));
+    c.header("Cache-Control", "no-store");
+    if (!res.ok) return render(c, codePage(lang, { error: res.reason }), 400);
+    logAdmin(db, admin(c), "issue_code", res.email, null, deps.now().getTime());
+    return render(c, codePage(lang, {}, { email: res.email, code: res.code, expires: fmtTime(lang)(res.expiresAt.getTime()) }));
   });
 
   app.get("/admin/settings", (c) => {

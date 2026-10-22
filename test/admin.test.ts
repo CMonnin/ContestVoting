@@ -21,7 +21,7 @@ test("admin pages: anon → login, non-admin → 404, admin → 200", async () =
   const ctx = setup();
   const user = await login(ctx, "alice@mcgill.ca");
   const admin = await login(ctx, ADMIN);
-  for (const path of ["/admin", "/admin/entries", "/admin/votes", "/admin/settings"]) {
+  for (const path of ["/admin", "/admin/entries", "/admin/votes", "/admin/code", "/admin/settings"]) {
     assert.equal((await get(ctx, path)).headers.get("location"), "/login", path);
     assert.equal((await get(ctx, path, user)).status, 404, path);
     assert.equal((await get(ctx, path, admin)).status, 200, path);
@@ -200,4 +200,30 @@ test("admin alerts are batched: at most one email per admin per 10 min, only for
 
   ctx.advance(10 * 60_000);
   assert.equal(await sendAdminAlerts(ctx.deps), 0, "nothing new");
+});
+
+test("backup code: admin issues a code on screen, it logs the person in, the log never holds the code", async () => {
+  const ctx = setup();
+  const admin = await login(ctx, ADMIN);
+  const user = await login(ctx, "alice@mcgill.ca");
+  const sentBefore = ctx.sent.length;
+
+  assert.equal((await adminPost(ctx, user, "/admin/code", { email: "jo@mcgill.ca" })).status, 404);
+  const bad = await adminPost(ctx, admin, "/admin/code", { email: "jo@gmail.com" }, "/admin/code");
+  assert.equal(bad.status, 400);
+  assert.match(await bad.text(), /Domain not allowed|Domaine non autorisé/);
+
+  const res = await adminPost(ctx, admin, "/admin/code", { email: "Jo@McGill.ca" }, "/admin/code");
+  assert.equal(res.status, 200);
+  assert.equal(res.headers.get("cache-control"), "no-store");
+  const m = /class="code-big">(\d{3}) (\d{3})</.exec(await res.text());
+  assert.ok(m, "code shown");
+  const code = m[1] + m[2];
+  assert.equal(ctx.sent.length, sentBefore, "nothing emailed");
+
+  const log = ctx.db.prepare("SELECT action, target, detail FROM admin_log WHERE action = 'issue_code'").get() as Record<string, unknown>;
+  assert.deepEqual({ ...log }, { action: "issue_code", target: "jo@mcgill.ca", detail: null });
+
+  const ok = await ctx.app.request(post("/login/verify", { email: "jo@mcgill.ca", code }));
+  assert.equal(ok.status, 302);
 });

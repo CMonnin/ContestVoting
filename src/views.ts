@@ -51,6 +51,7 @@ td, th { text-align:left; padding:6px 8px; border-bottom:1px solid #3a2d20; vert
 .flag { display:inline-block; background:#4a3b12; color:#ffd77a; border-radius:6px; padding:0 6px; font-size:.8rem; }
 button.small { width:auto; margin:0; padding:4px 10px; font-size:.85rem; }
 .winners { border:2px solid var(--accent); }
+.code-big { font-size:2.6rem; font-weight:700; letter-spacing:.15em; text-align:center; margin:12px 0; font-variant-numeric:tabular-nums; }
 .winners ol { font-size:1.15rem; padding-left:1.4em; margin:8px 0 0; }
 .winners a { color:var(--text); font-weight:700; }
 .gallery { display:grid; gap:16px; }

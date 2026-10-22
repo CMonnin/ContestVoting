@@ -28,6 +28,7 @@ Times live in config (`.env`), not code.
 - Normalise email: trim, lowercase. Compare the exact domain (no subdomain wildcard unless listed).
 - Code: 6 digits, random from the CSPRNG, stored hashed, valid 10 min, max 5 wrong attempts (then invalidated), resend cooldown 60 s, max 5 sends per email per hour, and an IP cap (soft: log + flag, since DRC wifi is a shared NAT).
 - Code only, no magic links: M365 Safe Links pre-clicks links.
+- Backup code: when the emailed code is stuck in a junk filter, an admin with the person in front of them generates a code on Admin → Backup code and reads it out; the person uses "I already have a code". Same rules as an emailed code; logged (email only, never the code).
 - Session: random token in an `HttpOnly; Secure; SameSite=Lax` cookie, hashed in the DB, expires 11-03 23:59.
 - Login only opens at the start of `open`. Admins can log in during any phase.
 - The email says which code is for which site, in FR + EN, so it isn't mistaken for phishing.
