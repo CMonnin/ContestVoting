@@ -38,7 +38,10 @@ label { margin-top:14px; }
 textarea { width:100%; font:inherit; padding:12px; border-radius:10px; border:1px solid var(--field-line); background:var(--field); color:var(--text); }
 input[type=file] { font-size:1rem; padding:10px; }
 label.check { display:flex; gap:10px; align-items:flex-start; font-weight:400; }
-label.check input { width:auto; margin-top:4px; accent-color:var(--accent); }
+label.check input { width:1.3em; height:1.3em; flex:none; margin:2px 0 0; accent-color:var(--accent); }
+fieldset label.check { margin-top:8px; padding:14px 16px; border:1px solid var(--field-line); border-radius:12px; background:var(--field); font-size:1.1rem; cursor:pointer; }
+fieldset label.check:has(input:checked) { border-color:var(--accent); background:rgba(255,122,26,.12); }
+input[type=file]::file-selector-button { margin-right:12px; padding:8px 16px; border:0; border-radius:999px; background:var(--glow); color:var(--accent-ink); font:600 1rem "Fredoka",system-ui,sans-serif; cursor:pointer; }
 fieldset { border:0; padding:0; margin:14px 0 0; }
 legend { font-weight:600; font-size:1.05rem; padding:0; }
 button.danger { background:transparent; box-shadow:none; color:var(--danger); border:1px solid var(--danger); }
