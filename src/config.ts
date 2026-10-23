@@ -23,7 +23,6 @@ export type Config = {
   siteDir: string;
   port: number;
   trustProxy: boolean;
-  ipSendLimitPerHour: number;
 };
 
 const list = (v: string | undefined) =>
@@ -109,6 +108,5 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     siteDir: env.SITE_DIR?.trim() || fileURLToPath(new URL("..", import.meta.url)),
     port: Number(env.PORT ?? 3000),
     trustProxy: env.TRUST_PROXY === "1",
-    ipSendLimitPerHour: Number(env.IP_SEND_LIMIT_PER_HOUR ?? 100),
   };
 }

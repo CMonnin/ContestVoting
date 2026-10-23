@@ -59,7 +59,7 @@ function storeCode(deps: Pick<AuthDeps, "db" | "cfg">, email: string, now: numbe
 
 export type RequestCodeResult =
   | { ok: true; email: string }
-  | { ok: false; reason: "invalid_email" | "domain" | "not_open" | "email_limit" | "ip_limit" | "send_failed" }
+  | { ok: false; reason: "invalid_email" | "domain" | "not_open" | "email_limit" | "send_failed" }
   | { ok: false; reason: "cooldown"; retryAfterSec: number };
 
 export async function requestCode(
@@ -82,10 +82,6 @@ export async function requestCode(
   const count = (sql: string, v: string) => (db.prepare(sql).get(v, now - HOUR) as { n: number }).n;
   if (count("SELECT COUNT(*) AS n FROM otp_sends WHERE email = ? AND sent_at > ?", email) >= MAX_SENDS_PER_EMAIL_PER_HOUR) {
     return { ok: false, reason: "email_limit" };
-  }
-  if (count("SELECT COUNT(*) AS n FROM otp_sends WHERE ip = ? AND sent_at > ?", ip) >= cfg.ipSendLimitPerHour) {
-    console.warn(`[auth] ip send limit hit ip=${ip} email=${email}`);
-    return { ok: false, reason: "ip_limit" };
   }
 
   const code = storeCode(deps, email, now);

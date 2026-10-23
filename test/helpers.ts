@@ -17,7 +17,6 @@ export const TEST_ENV = {
   PREVIEW_EMAILS: "tester@mcgill.ca",
   MAIL_TRANSPORT: "console",
   SESSION_SECRET: "x".repeat(32),
-  IP_SEND_LIMIT_PER_HOUR: "100",
 };
 
 export function setup(start = "2026-10-30T13:00:00Z") {

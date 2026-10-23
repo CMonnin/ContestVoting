@@ -26,7 +26,7 @@ Times live in config (`.env`), not code.
 - Login = institutional email + 6-digit code emailed via Scaleway TEM (SMTP).
 - Allowed domains: `mcgill.ca`, `mail.mcgill.ca`, `douglas.mcgill.ca`, `ssss.gouv.qc.ca`. Admins can add more domains at runtime. Any other domain → "use your institutional email".
 - Normalise email: trim, lowercase. Compare the exact domain (no subdomain wildcard unless listed).
-- Code: 6 digits, random from the CSPRNG, stored hashed, valid 10 min, max 5 wrong attempts (then invalidated), resend cooldown 60 s, max 5 sends per email per hour, and an IP cap (soft: log + flag, since DRC wifi is a shared NAT).
+- Code: 6 digits, random from the CSPRNG, stored hashed, valid 10 min, max 5 wrong attempts (then invalidated), resend cooldown 60 s, max 5 sends per email per hour. No per-IP cap: the DRC network is one shared IP, so a cap could lock everyone out at the morning rush (accepted risk: a script could request codes for many addresses).
 - Code only, no magic links: M365 Safe Links pre-clicks links.
 - Backup code: when the emailed code is stuck in a junk filter, an admin with the person in front of them generates a code on Admin → Backup code and reads it out; the person uses "I already have a code". Same rules as an emailed code; logged (email only, never the code).
 - Session: random token in an `HttpOnly; Secure; SameSite=Lax` cookie, hashed in the DB, expires 11-03 23:59 (or 1 h after login if later, so admins can still publish results).
@@ -127,14 +127,14 @@ SESSION_SECRET=...
 DATA_DIR=/data
 ```
 
-Optional: `PORT` (3000), `TRUST_PROXY=1` (behind Caddy: client IP from `X-Forwarded-For`), `PREVIEW_EMAILS` (non-admins allowed to log in before `OPEN_AT`, for deliverability tests; like admins, they skip the domain list), `IP_SEND_LIMIT_PER_HOUR`, `MAIL_TRANSPORT=console` (print codes instead of sending; local testing), `SITE_DIR` (where `index.html`, `landing.js`, `images/`, `fonts/` live).
+Optional: `PORT` (3000), `TRUST_PROXY=1` (behind Caddy: client IP from `X-Forwarded-For`), `PREVIEW_EMAILS` (non-admins allowed to log in before `OPEN_AT`, for deliverability tests; like admins, they skip the domain list), `MAIL_TRANSPORT=console` (print codes instead of sending; local testing), `SITE_DIR` (where `index.html`, `landing.js`, `images/`, `fonts/` live).
 
 ## 12. Data model (SQLite)
 
 ```
 users        (email PK, lang, created_at)
 otp_codes    (email PK, code_hash, expires_at, attempts, sent_at)
-otp_sends    (email, ip, sent_at)                -- rate limiting
+otp_sends    (email, ip, sent_at)                -- rate limiting (per email); ip kept for audit
 sessions     (token_hash PK, email, device_id, ip, ua, created_at, expires_at)
 entries      (id PK, owner_email UNIQUE, name, category, caption, status,
               reject_reason, consent_at, created_at, updated_at)

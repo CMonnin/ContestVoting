@@ -27,7 +27,7 @@ export function authRoutes(app: App, { deps, cookieOpts, phaseNow, render }: Rou
     const msg = errorText(lang, res.reason, res.reason === "cooldown" ? { s: res.retryAfterSec } : {});
     // A cooldown on resend should keep the user on the code screen.
     if (res.reason === "cooldown") return render(c, verifyPage(lang, normalizeEmail(email), msg, next), 429);
-    const status = res.reason === "email_limit" || res.reason === "ip_limit" ? 429 : 400;
+    const status = res.reason === "email_limit" ? 429 : 400;
     return render(c, loginPage(lang, { email, error: msg, next }), status);
   });
 
