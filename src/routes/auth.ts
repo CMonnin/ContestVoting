@@ -1,5 +1,7 @@
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
-import { deleteSession, normalizeEmail, requestCode, verifyCode } from "../auth.ts";
+import { logAdmin } from "../admin.ts";
+import { devLoginPage } from "../adminViews.ts";
+import { deleteSession, devLogin, normalizeEmail, requestCode, verifyCode } from "../auth.ts";
 import { errorText } from "../i18n.ts";
 import { DEFAULT_NEXT, loginPage, verifyPage } from "../views.ts";
 import { SESSION_COOKIE, type App, type RouteCtx } from "./context.ts";
@@ -54,6 +56,27 @@ export function authRoutes(app: App, { deps, cookieOpts, phaseNow, render }: Rou
       return render(c, verifyPage(lang, email, errorText(lang, "wrong", { n: res.attemptsLeft }), next), 400);
     }
     return render(c, loginPage(lang, { email, error: errorText(lang, res.reason), next }), 400);
+  });
+
+  // Break-glass admin login (DEV_LOGIN_SECRET). Not linked anywhere; 404 when off.
+  app.get("/dev/login", (c) => (deps.cfg.devLoginSecret ? render(c, devLoginPage(c.get("lang"))) : c.notFound()));
+
+  app.post("/dev/login", async (c) => {
+    if (!deps.cfg.devLoginSecret) return c.notFound();
+    const form = await c.req.parseBody();
+    const ip = c.get("ip");
+    const res = devLogin(deps, String(form.email ?? ""), String(form.secret ?? ""), {
+      deviceId: c.get("deviceId"),
+      ip,
+      ua: c.req.header("user-agent") ?? "",
+    });
+    if (!res.ok) {
+      console.warn(`[auth] dev login refused email=${normalizeEmail(String(form.email ?? ""))} ip=${ip}`);
+      return render(c, devLoginPage(c.get("lang"), true), 400);
+    }
+    logAdmin(deps.db, res.email, "dev_login", null, ip, deps.now().getTime());
+    setCookie(c, SESSION_COOKIE, res.token, { ...cookieOpts, expires: res.expiresAt });
+    return c.redirect("/admin");
   });
 
   app.post("/logout", (c) => {

@@ -19,10 +19,10 @@ export const TEST_ENV = {
   SESSION_SECRET: "x".repeat(32),
 };
 
-export function setup(start = "2026-10-30T13:00:00Z") {
+export function setup(start = "2026-10-30T13:00:00Z", env: Record<string, string> = {}) {
   const dataDir = mkdtempSync(join(tmpdir(), "h26-"));
   mkdirSync(join(dataDir, "photos"));
-  const cfg = loadConfig({ ...TEST_ENV, DATA_DIR: dataDir });
+  const cfg = loadConfig({ ...TEST_ENV, ...env, DATA_DIR: dataDir });
   const db = openDb(":memory:");
   const sent: Mail[] = [];
   const clock = { now: new Date(start) };

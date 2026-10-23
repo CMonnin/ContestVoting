@@ -156,6 +156,26 @@ export function verifyCode(
 
 type SessionMeta = { deviceId: string; ip: string; ua: string };
 
+const sha256 = (s: string) => createHash("sha256").update(s).digest();
+
+/**
+ * Break-glass login for admins when emailed codes can't get through: admin email + DEV_LOGIN_SECRET.
+ * Off unless the secret is set. The same refusal for a wrong secret and a non-admin email.
+ */
+export function devLogin(
+  deps: AuthDeps,
+  rawEmail: string,
+  secret: string,
+  meta: SessionMeta,
+): ({ ok: true; email: string } & ReturnType<typeof createSession>) | { ok: false } {
+  const expected = deps.cfg.devLoginSecret;
+  if (!expected) return { ok: false };
+  const email = normalizeEmail(rawEmail);
+  const secretOk = timingSafeEqual(sha256(secret), sha256(expected));
+  if (!secretOk || !isAdmin(deps.cfg, email)) return { ok: false };
+  return { ok: true, email, ...createSession(deps, email, meta) };
+}
+
 function createSession(deps: AuthDeps, email: string, meta: SessionMeta): { token: string; expiresAt: Date } {
   const { db, cfg } = deps;
   const now = deps.now().getTime();
