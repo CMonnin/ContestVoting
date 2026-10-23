@@ -122,7 +122,7 @@ export function verifyCode(
   deps: AuthDeps,
   rawEmail: string,
   rawCode: string,
-  meta: { deviceId: string; ip: string; ua: string },
+  meta: SessionMeta,
 ): VerifyResult {
   const { db, cfg } = deps;
   const email = normalizeEmail(rawEmail);
@@ -151,13 +151,21 @@ export function verifyCode(
   }
 
   db.prepare("DELETE FROM otp_codes WHERE email = ?").run(email);
+  return { ok: true, ...createSession(deps, email, meta) };
+}
+
+type SessionMeta = { deviceId: string; ip: string; ua: string };
+
+function createSession(deps: AuthDeps, email: string, meta: SessionMeta): { token: string; expiresAt: Date } {
+  const { db, cfg } = deps;
+  const now = deps.now().getTime();
   db.prepare("INSERT INTO users (email, created_at) VALUES (?, ?) ON CONFLICT(email) DO NOTHING").run(email, now);
   const token = randomBytes(32).toString("base64url");
   const expiresAt = new Date(Math.max(cfg.sessionEndAt.getTime(), now + HOUR));
   db.prepare(
     "INSERT INTO sessions (token_hash, email, device_id, ip, ua, created_at, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
   ).run(hashToken(token), email, meta.deviceId, meta.ip, meta.ua.slice(0, 300), now, expiresAt.getTime());
-  return { ok: true, token, expiresAt };
+  return { token, expiresAt };
 }
 
 export function getSessionUser(deps: Pick<AuthDeps, "db" | "cfg" | "now">, token: string | undefined): User | null {
