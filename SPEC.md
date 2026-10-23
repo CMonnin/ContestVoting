@@ -127,7 +127,7 @@ SESSION_SECRET=...
 DATA_DIR=/data
 ```
 
-Optional: `PORT` (3000), `TRUST_PROXY=1` (behind Caddy: client IP from `X-Forwarded-For`), `PREVIEW_EMAILS` (non-admins allowed to log in before `OPEN_AT`, for deliverability tests; like admins, they skip the domain list), `MAIL_TRANSPORT=console` (print codes instead of sending; local testing), `SITE_DIR` (where `index.html`, `landing.js`, `images/`, `fonts/` live).
+Optional: `PORT` (3000), `TRUST_PROXY=1` (behind Caddy: client IP from `X-Forwarded-For`), `PREVIEW_EMAILS` (non-admins allowed to log in before `OPEN_AT`, for deliverability tests; like admins, they skip the domain list), `MAIL_TRANSPORT=console` (print codes instead of sending; local testing), `SITE_DIR` (where `index.html`, `landing.js`, `images/`, `fonts/` live), `DEV_LOGIN_SECRET` (break-glass admin login at `/dev/login`: admin email + this secret, no emailed code; 404 when unset; every use in the admin log).
 
 ## 12. Data model (SQLite)
 

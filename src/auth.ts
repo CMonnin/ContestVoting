@@ -122,7 +122,7 @@ export function verifyCode(
   deps: AuthDeps,
   rawEmail: string,
   rawCode: string,
-  meta: { deviceId: string; ip: string; ua: string },
+  meta: SessionMeta,
 ): VerifyResult {
   const { db, cfg } = deps;
   const email = normalizeEmail(rawEmail);
@@ -151,13 +151,41 @@ export function verifyCode(
   }
 
   db.prepare("DELETE FROM otp_codes WHERE email = ?").run(email);
+  return { ok: true, ...createSession(deps, email, meta) };
+}
+
+type SessionMeta = { deviceId: string; ip: string; ua: string };
+
+const sha256 = (s: string) => createHash("sha256").update(s).digest();
+
+/**
+ * Break-glass login for admins when emailed codes can't get through: admin email + DEV_LOGIN_SECRET.
+ * Off unless the secret is set. The same refusal for a wrong secret and a non-admin email.
+ */
+export function devLogin(
+  deps: AuthDeps,
+  rawEmail: string,
+  secret: string,
+  meta: SessionMeta,
+): ({ ok: true; email: string } & ReturnType<typeof createSession>) | { ok: false } {
+  const expected = deps.cfg.devLoginSecret;
+  if (!expected) return { ok: false };
+  const email = normalizeEmail(rawEmail);
+  const secretOk = timingSafeEqual(sha256(secret), sha256(expected));
+  if (!secretOk || !isAdmin(deps.cfg, email)) return { ok: false };
+  return { ok: true, email, ...createSession(deps, email, meta) };
+}
+
+function createSession(deps: AuthDeps, email: string, meta: SessionMeta): { token: string; expiresAt: Date } {
+  const { db, cfg } = deps;
+  const now = deps.now().getTime();
   db.prepare("INSERT INTO users (email, created_at) VALUES (?, ?) ON CONFLICT(email) DO NOTHING").run(email, now);
   const token = randomBytes(32).toString("base64url");
   const expiresAt = new Date(Math.max(cfg.sessionEndAt.getTime(), now + HOUR));
   db.prepare(
     "INSERT INTO sessions (token_hash, email, device_id, ip, ua, created_at, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
   ).run(hashToken(token), email, meta.deviceId, meta.ip, meta.ua.slice(0, 300), now, expiresAt.getTime());
-  return { ok: true, token, expiresAt };
+  return { token, expiresAt };
 }
 
 export function getSessionUser(deps: Pick<AuthDeps, "db" | "cfg" | "now">, token: string | undefined): User | null {

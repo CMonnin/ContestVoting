@@ -18,6 +18,8 @@ export type Config = {
   smtp: { host: string; port: number; user: string; pass: string } | null;
   mailFrom: string;
   sessionSecret: string;
+  /** Break-glass admin login without an emailed code; null = off. */
+  devLoginSecret: string | null;
   dataDir: string;
   /** Where the organizers' landing page lives: index.html, landing.js, images/, fonts/. */
   siteDir: string;
@@ -78,6 +80,9 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
 
   const sessionSecret = req("SESSION_SECRET");
   if (sessionSecret && sessionSecret.length < 32) errors.push("SESSION_SECRET must be at least 32 characters");
+  const devLoginSecret = env.DEV_LOGIN_SECRET?.trim() || null;
+  if (devLoginSecret && devLoginSecret.length < 32) errors.push("DEV_LOGIN_SECRET must be at least 32 characters");
+  if (devLoginSecret && devLoginSecret === sessionSecret) errors.push("DEV_LOGIN_SECRET must differ from SESSION_SECRET");
 
   let origin = "";
   try {
@@ -104,6 +109,7 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     smtp,
     mailFrom: env.MAIL_FROM?.trim() || "Halloween DRC <noreply@halloween2026.douglasneuroinformatics.ca>",
     sessionSecret,
+    devLoginSecret,
     dataDir: env.DATA_DIR?.trim() || "./data",
     siteDir: env.SITE_DIR?.trim() || fileURLToPath(new URL("..", import.meta.url)),
     port: Number(env.PORT ?? 3000),

@@ -25,13 +25,11 @@ going further: without it nobody can log in.
 ## 2. Get the code and the secrets
 
 ```sh
-git clone -b feat/public https://github.com/CMonnin/ContestVoting.git halloween2026
+git clone https://github.com/DouglasNeuroInformatics/ContestVoting.git halloween2026
 cd halloween2026
 cp .env.example .env
 chmod 600 .env
 ```
-
-(Until the PR is merged upstream, the code lives on this fork and branch.)
 
 Fill in `.env`:
 
@@ -40,6 +38,7 @@ Fill in `.env`:
 | `SMTP_USER` | Scaleway Project ID — Cian sends it |
 | `SMTP_PASS` | Scaleway API secret key for this server — Cian sends it over a secure channel, never by email or chat |
 | `SESSION_SECRET` | `openssl rand -hex 32` |
+| `DEV_LOGIN_SECRET` | another `openssl rand -hex 32`; give it to Cian over a secure channel (see below) |
 | `ADMIN_EMAILS` | comma-separated, Cian sends the list |
 
 Leave the rest as in `.env.example` except the test-round values below.
@@ -123,6 +122,15 @@ live contest.
 
 Then check: the landing page loads, logging in with a McGill address says
 the contest isn't open yet, and an admin can still log in.
+
+## Backup admin login
+
+If login emails stop arriving, admins can still get in at
+`https://halloween2026.douglasneuroinformatics.ca/dev/login` with their admin
+email and `DEV_LOGIN_SECRET`. Once in, they can issue backup codes to
+everyone else. Each use is recorded in the admin log; refused attempts show
+in `docker compose logs app` as `dev login refused`. To turn it off, empty
+`DEV_LOGIN_SECRET` and `docker compose up -d`. `reset.sh` leaves it as is.
 
 ## Day to day
 

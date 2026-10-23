@@ -213,3 +213,18 @@ export function settingsPage(
 </div>`,
   );
 }
+
+/** Not in the admin frame: whoever sees this isn't logged in yet. */
+export function devLoginPage(lang: Lang, error?: boolean): Body {
+  const a = ta(lang);
+  return html`<h1>${a.devLoginTitle}</h1>
+<form class="panel" method="post" action="/dev/login">
+  <p class="help">${a.devLoginIntro}</p>
+  <label for="email">${t(lang).emailLabel}</label>
+  <input id="email" name="email" type="email" inputmode="email" autocomplete="username" required>
+  <label for="secret">${a.devLoginSecret}</label>
+  <input id="secret" name="secret" type="password" autocomplete="current-password" required>
+  ${error ? html`<p class="error" role="alert">${a.devLoginRefused}</p>` : ""}
+  <button type="submit">${t(lang).login}</button>
+</form>`;
+}
