@@ -25,13 +25,11 @@ going further: without it nobody can log in.
 ## 2. Get the code and the secrets
 
 ```sh
-git clone -b feat/public https://github.com/CMonnin/ContestVoting.git halloween2026
+git clone https://github.com/DouglasNeuroInformatics/ContestVoting.git halloween2026
 cd halloween2026
 cp .env.example .env
 chmod 600 .env
 ```
-
-(Until the PR is merged upstream, the code lives on this fork and branch.)
 
 Fill in `.env`:
 
