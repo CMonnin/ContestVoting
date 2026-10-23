@@ -21,7 +21,7 @@ header a.lang { padding:6px 16px; border-radius:999px; background:rgba(20,10,32,
 header form { display:flex; align-items:center; justify-content:flex-end; gap:4px; flex-wrap:wrap; }
 h1, h2, h3 { font-family:"Creepster",cursive; font-weight:400; letter-spacing:.04em; }
 h1, h2 { color:var(--accent); }
-h1 { font-size:clamp(2.3rem,11.5vw,3.4rem); line-height:1; margin:24px 0 16px; text-shadow:0 0 18px rgba(255,122,26,.6), 0 3px 0 #3a1400; }
+h1 { font-size:clamp(2rem,11.5vw,3.4rem); line-height:1; margin:24px 0 16px; text-shadow:0 0 18px rgba(255,122,26,.6), 0 3px 0 #3a1400; }
 h3 { font-size:1.5rem; line-height:1.15; margin:18px 0 8px; color:var(--glow); }
 .panel { background:var(--panel); border:1px solid var(--line); border-radius:18px; padding:20px clamp(16px,4vw,28px); margin:16px 0; backdrop-filter:blur(4px); }
 .panel > :first-child { margin-top:0; }
@@ -124,8 +124,8 @@ h1 { animation:flicker 5s infinite; }
 @keyframes flicker { 0%, 92%, 100% { opacity:1; } 93% { opacity:.4; } 94% { opacity:1; } 96% { opacity:.6; } 97% { opacity:1; } }
 footer { text-align:center; margin:40px 0 16px; }
 .farewell { display:flex; align-items:center; justify-content:center; gap:clamp(8px,2.25vw,18px); }
-.farewell span { font-family:"Creepster",cursive; letter-spacing:.05em; font-size:clamp(20px,5.25vw,34px); color:var(--accent); text-shadow:0 0 16px rgba(255,122,26,.55), 0 3px 0 #3a1400; }
-.jack { width:clamp(30px,6.75vw,48px); flex:none; animation:bob 3s ease-in-out infinite; overflow:visible; }
+.farewell span { font-family:"Creepster",cursive; letter-spacing:.05em; font-size:clamp(16px,5vw,34px); white-space:nowrap; color:var(--accent); text-shadow:0 0 16px rgba(255,122,26,.55), 0 3px 0 #3a1400; }
+.jack { width:clamp(24px,6.75vw,48px); flex:none; animation:bob 3s ease-in-out infinite; overflow:visible; }
 .jack:last-child { animation-delay:-1.5s; }
 .jack .face { fill:#ffd84a; filter:drop-shadow(0 0 4px #ffb347); animation:candle 2.4s infinite; }
 @keyframes bob { 0%, 100% { transform:translateY(0) rotate(-4deg); } 50% { transform:translateY(-6px) rotate(4deg); } }
