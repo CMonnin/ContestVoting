@@ -22,6 +22,8 @@ h1, h2 { color:var(--accent); }
 h1 { font-size:clamp(2.6rem,11.5vw,3.6rem); line-height:1; margin:24px 0 16px; text-shadow:0 0 18px rgba(255,122,26,.6), 0 3px 0 #3a1400; }
 h3 { font-size:1.5rem; line-height:1.15; margin:18px 0 8px; color:var(--glow); }
 .panel { background:var(--panel); border:1px solid var(--line); border-radius:18px; padding:20px clamp(16px,4vw,28px); margin:16px 0; backdrop-filter:blur(4px); }
+.panel > :first-child { margin-top:0; }
+.panel > :last-child, .card > :last-child { margin-bottom:0; }
 label { display:block; font-weight:600; font-size:1.05rem; margin-bottom:6px; }
 input, textarea, select { font-family:inherit; }
 input { width:100%; font-size:1.1rem; padding:12px; border-radius:10px; border:1px solid var(--field-line); background:var(--field); color:var(--text); }
