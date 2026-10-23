@@ -11,7 +11,9 @@ type Body = HtmlEscapedString | Promise<HtmlEscapedString>;
 const CSS = `
 :root { --bg:#0d0716; --bg2:#1d0f2e; --panel:rgba(29,15,46,.78); --line:rgba(255,122,26,.3); --field:#140a22; --field-line:#4a3366; --text:#f3e9ff; --muted:#b9a6d1; --accent:#ff7a1a; --glow:#ffb347; --accent-ink:#1a0b00; --danger:#ff6b6b; }
 * { box-sizing:border-box; }
-body { margin:0; color:var(--text); font:17px/1.6 "Fredoka",system-ui,sans-serif; background:radial-gradient(ellipse at 50% 0%, var(--bg2) 0%, var(--bg) 65%) fixed, var(--bg); }
+/* Every rem below scales from this, so secondary text stays readable on phones. */
+html { font-size:18px; }
+body { margin:0; color:var(--text); font:1rem/1.6 "Fredoka",system-ui,sans-serif; background:radial-gradient(ellipse at 50% 0%, var(--bg2) 0%, var(--bg) 65%) fixed, var(--bg); }
 a { color:var(--glow); }
 .wrap { max-width:640px; margin:0 auto; padding:16px; }
 header { display:flex; flex-direction:column; align-items:flex-end; gap:6px; text-align:right; }
@@ -19,7 +21,7 @@ header a.lang { padding:6px 16px; border-radius:999px; background:rgba(20,10,32,
 header form { display:flex; align-items:center; justify-content:flex-end; gap:4px; flex-wrap:wrap; }
 h1, h2, h3 { font-family:"Creepster",cursive; font-weight:400; letter-spacing:.04em; }
 h1, h2 { color:var(--accent); }
-h1 { font-size:clamp(2.6rem,11.5vw,3.6rem); line-height:1; margin:24px 0 16px; text-shadow:0 0 18px rgba(255,122,26,.6), 0 3px 0 #3a1400; }
+h1 { font-size:clamp(2.3rem,11.5vw,3.4rem); line-height:1; margin:24px 0 16px; text-shadow:0 0 18px rgba(255,122,26,.6), 0 3px 0 #3a1400; }
 h3 { font-size:1.5rem; line-height:1.15; margin:18px 0 8px; color:var(--glow); }
 .panel { background:var(--panel); border:1px solid var(--line); border-radius:18px; padding:20px clamp(16px,4vw,28px); margin:16px 0; backdrop-filter:blur(4px); }
 .panel > :first-child { margin-top:0; }
@@ -79,8 +81,8 @@ button.small { width:auto; margin:0; padding:4px 10px; font-size:.85rem; }
 button.secondary { background:transparent; color:var(--glow); border:1.5px solid var(--glow); box-shadow:none; }
 .btn { display:inline-block; margin-top:4px; padding:12px 24px; border-radius:999px; text-decoration:none; font-weight:600; font-size:1.05rem; color:var(--accent-ink); background:var(--accent); box-shadow:0 0 18px rgba(255,122,26,.25); }
 .card img.cover { width:100%; height:auto; max-height:75vh; object-fit:contain; border-radius:12px; display:block; background:var(--field); }
-.card h3 { font-size:1.9rem; line-height:1.1; margin:14px 0 6px; }
-section > h2 { font-size:clamp(2.4rem,11vw,3rem); margin:36px 0 14px; text-shadow:0 0 14px rgba(255,122,26,.5), 0 3px 0 #3a1400; }
+.card h3 { font-size:1.8rem; line-height:1.1; margin:14px 0 6px; }
+section > h2 { font-size:clamp(2.2rem,10vw,2.8rem); margin:36px 0 14px; text-shadow:0 0 14px rgba(255,122,26,.5), 0 3px 0 #3a1400; }
 /* Night scene, flying bats, fog and footer: copied from the organizers' index.html. */
 .wrap { position:relative; z-index:1; }
 .sky { position:fixed; top:3vh; left:4vw; width:220px; height:200px; z-index:0; transform-origin:top left; pointer-events:none; }
