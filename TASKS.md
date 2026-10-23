@@ -73,7 +73,7 @@ Ordered by the critical path. The deliverability test gates everything else.
 - [ ] On call 08:00–16:00 (submissions); watch logs and the admin queue.
 - [ ] Voting runs until 11-03 16:00; then admins resolve ties, publish results.
 
-## T8 — After (by 12-03, 30 days after voting closes)
+## T8 — After (by 12-01, within 30 days of voting closing)
 
 - [ ] Export winners' photos if the DRC wants them.
 - [ ] Purge DB + photos; stop the container; remove DNS records.

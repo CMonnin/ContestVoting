@@ -83,7 +83,7 @@ Times live in config (`.env`), not code.
 - Collected: email, entry content, photos, vote, ip/ua (anti-fraud).
 - Consent text (FR + EN) on submission: photos shown publicly on this site during the contest; deleted within 30 days; removal on request.
 - Anyone pictured can ask an admin to remove an entry (contact on the landing page).
-- Purge by 2026-11-29: all rows + photos, except winners' photos if the DRC asks (exported, then the DB is deleted).
+- Purge by 2026-12-01: all rows + photos, except winners' photos if the DRC asks (exported, then the DB is deleted).
 - `X-Robots-Tag: noindex` site-wide.
 
 ## 9. i18n
