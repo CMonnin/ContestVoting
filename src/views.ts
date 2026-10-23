@@ -64,7 +64,7 @@ nav.admin a { padding:8px 14px; border-radius:999px; border:1px solid var(--fiel
 nav.admin a.current { background:var(--accent); border-color:var(--accent); color:var(--accent-ink); }
 nav.admin + * { margin-top:0; }
 select { width:100%; font-size:1rem; padding:10px; border-radius:10px; border:1px solid var(--field-line); background:var(--field); color:var(--text); }
-table { width:100%; border-collapse:collapse; font-size:.9rem; display:block; overflow-x:auto; }
+table { width:100%; border-collapse:collapse; font-size:.9rem; display:block; overflow-x:auto; scrollbar-color:var(--field-line) transparent; }
 td, th { text-align:left; padding:6px 8px; border-bottom:1px solid var(--field-line); vertical-align:top; }
 .flag { display:inline-block; background:#4a3b12; color:#ffd77a; border-radius:999px; padding:0 8px; font-size:.8rem; }
 button.small { width:auto; margin:0; padding:4px 10px; font-size:.85rem; }
