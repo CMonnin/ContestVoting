@@ -66,8 +66,14 @@ button.small { width:auto; margin:0; padding:4px 10px; font-size:.85rem; }
 .winners ol { font-size:1.15rem; padding-left:1.4em; margin:8px 0 0; }
 .winners a { color:var(--text); font-weight:600; }
 .gallery { display:grid; gap:16px; }
-.card { background:var(--panel); border:1px solid var(--line); border-radius:18px; padding:12px; }
-.card img.cover { width:100%; max-height:70vh; object-fit:cover; border-radius:12px; display:block; }
+.card { background:var(--panel); border:1px solid var(--line); border-radius:18px; padding:12px 12px 16px; }
+.card.voted { border:2px solid #6fd06f; box-shadow:0 0 24px rgba(111,208,111,.25); }
+.card .badge { display:block; text-align:center; margin:14px 0 0; padding:13px; font-size:1.1rem; }
+.card p { margin:6px 4px 0; }
+.card h3 { margin-left:4px; margin-right:4px; }
+button.secondary { background:transparent; color:var(--glow); border:1.5px solid var(--glow); box-shadow:none; }
+.btn { display:inline-block; margin-top:4px; padding:12px 24px; border-radius:999px; text-decoration:none; font-weight:600; font-size:1.05rem; color:var(--accent-ink); background:var(--accent); box-shadow:0 0 18px rgba(255,122,26,.25); }
+.card img.cover { width:100%; aspect-ratio:4/5; max-height:75vh; object-fit:cover; border-radius:12px; display:block; background:var(--field); }
 .card h3 { font-size:1.9rem; line-height:1.1; margin:14px 0 6px; }
 section > h2 { font-size:clamp(2.4rem,11vw,3rem); margin:36px 0 14px; text-shadow:0 0 14px rgba(255,122,26,.5), 0 3px 0 #3a1400; }
 /* Night scene, flying bats, fog and footer: copied from the organizers' index.html. */
@@ -235,9 +241,9 @@ export function homePage(
     if (!opts.votingOpen || !opts.user) return "";
     const mine = opts.myVotes[e.category];
     if (mine === e.id) return html`<p class="badge approved">${s.yourVote}</p>`;
-    return html`<form method="post" action="/vote"><input type="hidden" name="entry" value="${e.id}"><button type="submit">${mine ? s.changeVote : s.vote}</button></form>`;
+    return html`<form method="post" action="/vote"><input type="hidden" name="entry" value="${e.id}"><button class="${mine ? "secondary" : ""}" type="submit">${mine ? s.changeVote : s.vote}</button></form>`;
   };
-  const card = (e: GalleryEntry) => html`<article class="card" id="e${e.id}">
+  const card = (e: GalleryEntry) => html`<article class="card${opts.myVotes[e.category] === e.id ? " voted" : ""}" id="e${e.id}">
   <a href="/photos/${e.photos[0].file}"><img class="cover" src="/photos/${e.photos[0].thumb}" alt="${e.name}"></a>
   ${e.photos.length > 1
     ? html`<div class="thumbs">${e.photos.slice(1).map((p) => html`<a href="/photos/${p.file}"><img src="/photos/${p.thumb}" alt=""></a>`)}</div>`
@@ -266,8 +272,8 @@ ${opts.results
   <p><strong>${opts.phaseText}</strong></p>
   ${opts.votingOpen ? html`<p>${s.votePerCategory}</p>` : ""}
   ${opts.user
-    ? opts.showEntryLink ? html`<p><a href="/me/entry">${s.myEntry}</a></p>` : ""
-    : html`${opts.votingOpen ? html`<p>${s.loginToVote}</p>` : ""}<p><a href="/login?next=/gallery">${s.login}</a></p>`}
+    ? opts.showEntryLink ? html`<p><a class="btn" href="/me/entry">${s.myEntry}</a></p>` : ""
+    : html`${opts.votingOpen ? html`<p>${s.loginToVote}</p>` : ""}<p><a class="btn" href="/login?next=/gallery">${s.login}</a></p>`}
 </div>
 ${opts.entries.length === 0
     ? html`<p class="help">${s.galleryEmpty}</p>`
