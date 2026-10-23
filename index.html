@@ -4,9 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Halloween at the Douglas 2026</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Creepster&family=Fredoka:wght@400;600&display=swap" rel="stylesheet">
+<link href="/fonts/fonts.css" rel="stylesheet">
 <style>
   :root {
     --bg: #0d0716;
@@ -290,7 +288,7 @@
 
   <main>
     <!-- Content mirrors https://douglas.research.mcgill.ca/halloween-at-the-douglas-2026 (source of truth).
-         Set SUBMIT_URL / GALLERY_URL in the script once the portals are live. -->
+         The app sets the button links per phase (data-submit / data-gallery on the body tag, see landing.js). -->
 
     <div data-lang-block="en">
       <header class="hero">
@@ -454,57 +452,6 @@
     </footer>
   </main>
 
-<script>
-  // Fill these in when the portals open; buttons stay disabled while empty.
-  const SUBMIT_URL = "";
-  const GALLERY_URL = "";
-
-  const I18N = {
-    en: { pageTitle: "Halloween at the Douglas 2026", footer: "Happy Halloween!" },
-    fr: { pageTitle: "Halloween au Douglas 2026", footer: "Joyeuse Halloween !" }
-  };
-
-  function detectLang() {
-    const q = new URLSearchParams(location.search).get("lang");
-    if (q && I18N[q]) return q;
-    try {
-      const saved = localStorage.getItem("lang");
-      if (saved && I18N[saved]) return saved;
-    } catch (e) {}
-    const prefs = navigator.languages || [navigator.language || "en"];
-    for (const p of prefs) {
-      const code = (p || "").slice(0, 2).toLowerCase();
-      if (I18N[code]) return code;
-    }
-    return "en";
-  }
-
-  function setLang(lang, persist) {
-    const t = I18N[lang];
-    document.documentElement.lang = lang;
-    document.title = t.pageTitle;
-    document.querySelectorAll("[data-i18n]").forEach(el => el.textContent = t[el.dataset.i18n]);
-    document.querySelectorAll("[data-lang-block]").forEach(el => el.hidden = el.dataset.langBlock !== lang);
-    document.querySelectorAll(".lang button").forEach(b => b.setAttribute("aria-pressed", b.dataset.lang === lang));
-    if (persist) { try { localStorage.setItem("lang", lang); } catch (e) {} }
-  }
-
-  const URLS = { submit: SUBMIT_URL, gallery: GALLERY_URL };
-  document.querySelectorAll("[data-link]").forEach(a => {
-    const url = URLS[a.dataset.link];
-    if (url) {
-      a.href = url; a.target = "_blank"; a.rel = "noopener";
-      a.querySelector("small").remove();
-    } else {
-      a.setAttribute("aria-disabled", "true");
-      a.addEventListener("click", e => e.preventDefault());
-    }
-  });
-
-  document.querySelectorAll(".lang button").forEach(b =>
-    b.addEventListener("click", () => setLang(b.dataset.lang, true)));
-
-  setLang(detectLang(), false);
-</script>
+<script src="/landing.js"></script>
 </body>
 </html>
