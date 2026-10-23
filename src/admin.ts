@@ -171,7 +171,7 @@ export function voteAudit(db: Db): AuditVote[] {
   });
 }
 
-export function voidVote(deps: AuthDeps, admin: string, voterEmail: string, category: string): boolean {
+export function voidVote(deps: AuthDeps, admin: string, voterEmail: string, category: Category): boolean {
   const res = deps.db.prepare("DELETE FROM votes WHERE voter_email = ? AND category = ?").run(voterEmail, category);
   if (res.changes === 0) return false;
   logAdmin(deps.db, admin, "void_vote", voterEmail, category, deps.now().getTime());

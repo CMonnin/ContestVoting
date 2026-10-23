@@ -17,7 +17,7 @@ import { ta, type AdminError, type AdminNotice } from "../adminI18n.ts";
 import { issueCode } from "../auth.ts";
 import { codePage, entriesPage, queuePage, settingsPage, votesPage, type Flash } from "../adminViews.ts";
 import { getSetting, setSetting } from "../db.ts";
-import { CATEGORIES, deleteEntry, type Category } from "../entries.ts";
+import { CATEGORIES, deleteEntry, isCategory, type Category } from "../entries.ts";
 import type { Lang } from "../i18n.ts";
 import { isPhase } from "../phase.ts";
 import { deletePhotoFiles } from "../photos.ts";
@@ -99,7 +99,7 @@ export function adminRoutes(app: App, { deps, photosDir, phaseNow, render }: Rou
 
   app.post("/admin/votes/void", async (c) => {
     const form = await c.req.parseBody();
-    const ok = voidVote(deps, admin(c), String(form.voter ?? ""), String(form.category ?? ""));
+    const ok = isCategory(form.category) && voidVote(deps, admin(c), String(form.voter ?? ""), form.category);
     return back(c, ok ? { n: "voided" } : { e: "not_found" }, "/admin/votes");
   });
 
