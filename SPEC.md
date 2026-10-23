@@ -29,7 +29,7 @@ Times live in config (`.env`), not code.
 - Code: 6 digits, random from the CSPRNG, stored hashed, valid 10 min, max 5 wrong attempts (then invalidated), resend cooldown 60 s, max 5 sends per email per hour, and an IP cap (soft: log + flag, since DRC wifi is a shared NAT).
 - Code only, no magic links: M365 Safe Links pre-clicks links.
 - Backup code: when the emailed code is stuck in a junk filter, an admin with the person in front of them generates a code on Admin → Backup code and reads it out; the person uses "I already have a code". Same rules as an emailed code; logged (email only, never the code).
-- Session: random token in an `HttpOnly; Secure; SameSite=Lax` cookie, hashed in the DB, expires 11-03 23:59.
+- Session: random token in an `HttpOnly; Secure; SameSite=Lax` cookie, hashed in the DB, expires 11-03 23:59 (or 1 h after login if later, so admins can still publish results).
 - Login only opens at the start of `open`. Admins can log in during any phase.
 - The email says which code is for which site, in FR + EN, so it isn't mistaken for phishing.
 
@@ -111,7 +111,7 @@ Times live in config (`.env`), not code.
 
 ```
 BASE_URL=https://halloween2026.douglasneuroinformatics.ca
-TZ=America/Montreal
+TZ_CONTEST=America/Montreal
 OPEN_AT=2026-10-30T08:00
 SUBMIT_CLOSE_AT=2026-10-30T16:00
 VOTE_CLOSE_AT=2026-11-03T16:00
@@ -127,19 +127,21 @@ SESSION_SECRET=...
 DATA_DIR=/data
 ```
 
+Optional: `PORT` (3000), `TRUST_PROXY=1` (behind Caddy: client IP from `X-Forwarded-For`), `PREVIEW_EMAILS` (non-admins allowed to log in before `OPEN_AT`, for deliverability tests; like admins, they skip the domain list), `IP_SEND_LIMIT_PER_HOUR`, `MAIL_TRANSPORT=console` (print codes instead of sending; local testing), `SITE_DIR` (where `index.html`, `landing.js`, `images/`, `fonts/` live).
+
 ## 12. Data model (SQLite)
 
 ```
 users        (email PK, lang, created_at)
 otp_codes    (email PK, code_hash, expires_at, attempts, sent_at)
 otp_sends    (email, ip, sent_at)                -- rate limiting
-sessions     (token_hash PK, email, device_id, ip, ua, expires_at)
+sessions     (token_hash PK, email, device_id, ip, ua, created_at, expires_at)
 entries      (id PK, owner_email UNIQUE, name, category, caption, status,
               reject_reason, consent_at, created_at, updated_at)
 photos       (id PK, entry_id FK, position, file, thumb)
 votes        (voter_email, category, entry_id FK, device_id, ip, ua, updated_at; PK voter_email+category)
 admin_log    (id PK, admin_email, action, target, detail, at)
-settings     (key PK, value)   -- phase_override, extra_domains, results_json
+settings     (key PK, value)   -- phase_override, extra_domains, results_json, results_published, admin_alert_at
 ```
 
 ## 13. Security checklist
@@ -150,7 +152,7 @@ settings     (key PK, value)   -- phase_override, extra_domains, results_json
 - Escape all user text (JSX does this); no user HTML.
 - Upload limits enforced in Caddy and the app; decode-validate images.
 - Rate-limit the OTP request and verify endpoints.
-- Security headers: CSP (self only), `nosniff`, `frame-ancestors 'none'`.
+- Security headers: CSP (scripts, fonts, connections: self only; inline styles and `data:` images allowed for the page markup), `nosniff`, `frame-ancestors 'none'`.
 
 ## 14. Risks
 
