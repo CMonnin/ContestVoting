@@ -38,6 +38,33 @@ docker compose up -d --build
 Add `deploy/Caddyfile` to the server's Caddy config and reload Caddy. The app
 listens on `127.0.0.1:3000` only; Caddy terminates TLS.
 
+### Test round, then launch
+
+Run a test round on the real server first. In `.env`:
+
+```sh
+OPEN_AT=2026-10-23T08:00              # in the past: everything unlocked
+ALLOWED_DOMAINS=test.invalid          # nobody else can log in
+PREVIEW_EMAILS=tester1@mcgill.ca,...  # the testers (admins can log in too)
+```
+
+Anyone can see the gallery meanwhile (the poster QR is out), so name test
+entries clearly, e.g. "TEST – Dracula". To try later phases, move
+`SUBMIT_CLOSE_AT` / `VOTE_CLOSE_AT` earlier and `docker compose up -d`.
+
+To launch (by 10-29, not the morning of), set the real `OPEN_AT` and
+`ALLOWED_DOMAINS` and empty `PREVIEW_EMAILS` in `.env`, then:
+
+```sh
+scripts/reset.sh
+```
+
+It checks `.env`, asks you to type `wipe`, deletes `./data` (test entries,
+photos, votes, sessions), rotates `SESSION_SECRET` and restarts the
+container. It refuses to run once `OPEN_AT` has passed. Afterwards check that
+the landing page loads, a McGill login is refused until opening, and admin
+login works.
+
 ## Landing page
 
 The landing page is the organizers' `index.html` (with `landing.js`,
