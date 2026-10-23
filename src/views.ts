@@ -11,8 +11,8 @@ type Body = HtmlEscapedString | Promise<HtmlEscapedString>;
 const CSS = `
 :root { --bg:#0d0716; --bg2:#1d0f2e; --panel:rgba(29,15,46,.78); --line:rgba(255,122,26,.3); --field:#140a22; --field-line:#4a3366; --text:#f3e9ff; --muted:#b9a6d1; --accent:#ff7a1a; --glow:#ffb347; --accent-ink:#1a0b00; --danger:#ff6b6b; }
 * { box-sizing:border-box; }
-/* Every rem below scales from this, so secondary text stays readable on phones. */
-html { font-size:18px; }
+/* Every rem below scales from this; a percentage (18px by default) still follows the reader's text-size setting. */
+html { font-size:112.5%; }
 body { margin:0; color:var(--text); font:1rem/1.6 "Fredoka",system-ui,sans-serif; background:radial-gradient(ellipse at 50% 0%, var(--bg2) 0%, var(--bg) 65%) fixed, var(--bg); }
 a { color:var(--glow); }
 .wrap { max-width:640px; margin:0 auto; padding:16px; }
