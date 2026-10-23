@@ -55,9 +55,9 @@ button.danger { background:transparent; box-shadow:none; color:var(--danger); bo
 .thumbs img { width:100%; aspect-ratio:1; object-fit:cover; border-radius:10px; display:block; }
 nav.main { display:flex; gap:8px; flex-wrap:wrap; margin:12px 0 0; }
 nav.main a { background:var(--panel); border:1px solid var(--line); color:var(--text); text-decoration:none; padding:10px 18px; border-radius:999px; font-weight:600; font-size:1.05rem; }
-nav.admin { display:flex; gap:16px; flex-wrap:wrap; margin:16px 0; }
-nav.admin a { color:var(--muted); }
-nav.admin a.current { color:var(--accent); font-weight:600; }
+nav.admin { display:flex; gap:8px; flex-wrap:wrap; margin:16px 0; }
+nav.admin a { padding:8px 14px; border-radius:999px; border:1px solid var(--field-line); color:var(--muted); text-decoration:none; font-weight:600; }
+nav.admin a.current { background:var(--accent); border-color:var(--accent); color:var(--accent-ink); }
 nav.admin + * { margin-top:0; }
 select { width:100%; font-size:1rem; padding:10px; border-radius:10px; border:1px solid var(--field-line); background:var(--field); color:var(--text); }
 table { width:100%; border-collapse:collapse; font-size:.9rem; display:block; overflow-x:auto; }
