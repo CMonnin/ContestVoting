@@ -14,9 +14,9 @@ const CSS = `
 body { margin:0; color:var(--text); font:16px/1.5 "Fredoka",system-ui,sans-serif; background:radial-gradient(ellipse at 50% 0%, var(--bg2) 0%, var(--bg) 65%) fixed, var(--bg); }
 a { color:var(--glow); }
 .wrap { max-width:640px; margin:0 auto; padding:16px; }
-header { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
-header a { color:var(--muted); }
-header form { display:flex; align-items:center; gap:4px; flex-wrap:wrap; }
+header { display:flex; flex-direction:column; align-items:flex-end; gap:6px; text-align:right; }
+header a.lang { padding:6px 16px; border-radius:999px; background:rgba(20,10,32,.75); border:1px solid rgba(255,122,26,.35); color:var(--text); text-decoration:none; font-weight:600; letter-spacing:.05em; }
+header form { display:flex; align-items:center; justify-content:flex-end; gap:4px; flex-wrap:wrap; }
 h1, h2, h3 { font-family:"Creepster",cursive; font-weight:400; letter-spacing:.04em; }
 h1, h2 { color:var(--accent); }
 h1 { font-size:clamp(2rem,9vw,2.8rem); line-height:1.05; margin:28px 0 12px; text-shadow:0 0 18px rgba(255,122,26,.6), 0 3px 0 #3a1400; }
@@ -120,7 +120,8 @@ footer { text-align:center; margin:40px 0 16px; }
 .graveyard { display:block; width:75%; height:auto; margin:14px auto 0; fill:#000; background:radial-gradient(ellipse 65% 130% at 50% 100%, #ffd27a, var(--accent) 40%, rgba(255,122,26,.45) 65%, transparent 85%); -webkit-mask-image:linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); mask-image:linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); }
 /* Keep the page clear of the moon until the content column is wide of it. */
 @media (max-width:1170px) { .wrap { padding-top:96px; } }
-@media (max-width:600px) { .sky { top:4px; left:4px; transform:scale(.6); opacity:.75; } .wrap { padding-top:84px; } }
+/* On phones the header sits beside the shrunken moon and the nav starts below it. */
+@media (max-width:600px) { .sky { top:4px; left:4px; transform:scale(.6); opacity:.75; } .wrap { padding-top:16px; } header { min-height:104px; padding-left:132px; } }
 @media (prefers-reduced-motion:reduce) { *, *::before, *::after { animation:none !important; transition-duration:.01ms !important; } }
 `;
 
@@ -190,7 +191,7 @@ export function layout(lang: Lang, user: User | null, body: Body): Body {
 ${raw(SCENE)}
 <div class="wrap">
 <header>
-  <a href="/lang/${other}">${s.switchLang}</a>
+  <a class="lang" href="/lang/${other}">${s.switchLang}</a>
   ${user
     ? html`<form method="post" action="/logout" style="margin:0">
         <span class="help">${s.loggedInAs} ${user.email}</span>
