@@ -1,5 +1,5 @@
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
-import { deleteSession, requestCode, verifyCode } from "../auth.ts";
+import { deleteSession, normalizeEmail, requestCode, verifyCode } from "../auth.ts";
 import { errorText } from "../i18n.ts";
 import { DEFAULT_NEXT, loginPage, verifyPage } from "../views.ts";
 import { SESSION_COOKIE, type App, type RouteCtx } from "./context.ts";
@@ -26,7 +26,7 @@ export function authRoutes(app: App, { deps, cookieOpts, phaseNow, render }: Rou
     if (res.ok) return render(c, verifyPage(lang, res.email, undefined, next));
     const msg = errorText(lang, res.reason, res.reason === "cooldown" ? { s: res.retryAfterSec } : {});
     // A cooldown on resend should keep the user on the code screen.
-    if (res.reason === "cooldown") return render(c, verifyPage(lang, email.trim().toLowerCase(), msg, next), 429);
+    if (res.reason === "cooldown") return render(c, verifyPage(lang, normalizeEmail(email), msg, next), 429);
     const status = res.reason === "email_limit" || res.reason === "ip_limit" ? 429 : 400;
     return render(c, loginPage(lang, { email, error: msg, next }), status);
   });
