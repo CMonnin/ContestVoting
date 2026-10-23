@@ -78,7 +78,7 @@ button.small { width:auto; margin:0; padding:4px 10px; font-size:.85rem; }
 .card h3 { margin-left:4px; margin-right:4px; }
 button.secondary { background:transparent; color:var(--glow); border:1.5px solid var(--glow); box-shadow:none; }
 .btn { display:inline-block; margin-top:4px; padding:12px 24px; border-radius:999px; text-decoration:none; font-weight:600; font-size:1.05rem; color:var(--accent-ink); background:var(--accent); box-shadow:0 0 18px rgba(255,122,26,.25); }
-.card img.cover { width:100%; aspect-ratio:4/5; max-height:75vh; object-fit:cover; border-radius:12px; display:block; background:var(--field); }
+.card img.cover { width:100%; height:auto; max-height:75vh; object-fit:contain; border-radius:12px; display:block; background:var(--field); }
 .card h3 { font-size:1.9rem; line-height:1.1; margin:14px 0 6px; }
 section > h2 { font-size:clamp(2.4rem,11vw,3rem); margin:36px 0 14px; text-shadow:0 0 14px rgba(255,122,26,.5), 0 3px 0 #3a1400; }
 /* Night scene, flying bats, fog and footer: copied from the organizers' index.html. */
