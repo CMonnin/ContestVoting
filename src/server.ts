@@ -6,10 +6,13 @@ import { createApp } from "./app.ts";
 import { loadConfig } from "./config.ts";
 import { openDb } from "./db.ts";
 import { createMailer } from "./mail.ts";
+import { seedTestEntries } from "./seed.ts";
 
 const cfg = loadConfig();
-mkdirSync(join(cfg.dataDir, "photos"), { recursive: true });
+const photosDir = join(cfg.dataDir, "photos");
+mkdirSync(photosDir, { recursive: true });
 const db = openDb(join(cfg.dataDir, "app.db"));
+await seedTestEntries(db, cfg.siteDir, photosDir);
 const deps = { db, cfg, mailer: createMailer(cfg), now: () => new Date() };
 const app = createApp(deps);
 

@@ -3,3 +3,4 @@ data/
 .env
 .claude/
 .env.local
+images/test-entries/

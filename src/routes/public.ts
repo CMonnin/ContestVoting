@@ -3,10 +3,10 @@ import { join } from "node:path";
 import { serveStatic } from "@hono/node-server/serve-static";
 import { setCookie } from "hono/cookie";
 import { getResults } from "../admin.ts";
-import { listApproved } from "../entries.ts";
+import { getEntryByOwner, listApproved } from "../entries.ts";
 import { errorText, t } from "../i18n.ts";
 import { seededShuffle } from "../shuffle.ts";
-import { homePage } from "../views.ts";
+import { homePage, landingNav } from "../views.ts";
 import { castVote, myVotes, votingOpen } from "../votes.ts";
 import { loginFor } from "./auth.ts";
 import { LANG_COOKIE, YEAR_S, type App, type RouteCtx } from "./context.ts";
@@ -34,7 +34,10 @@ export function publicRoutes(app: App, { deps, cookieOpts, phaseNow, render }: R
       state.gallery = "/gallery";
     }
     const attrs = Object.entries(state).map(([k, v]) => ` data-${k}="${v}"`).join("");
-    return c.html(page.replace("<body>", `<body${attrs}>`));
+    const user = c.get("user");
+    const us = user ? { hasEntry: !!getEntryByOwner(db, user.email), ...(() => { const v = myVotes(db, user.email); return { votedIndividual: !!v.individual, votedGroup: !!v.group }; })() } : undefined;
+    const nav = landingNav(lang, user, us);
+    return c.html(page.replace("<body>", `<body${attrs}>\n${nav}`));
   });
 
   const site = serveStatic({ root: cfg.siteDir });
@@ -56,11 +59,11 @@ export function publicRoutes(app: App, { deps, cookieOpts, phaseNow, render }: R
       homePage(lang, {
         phaseText: text,
         user,
-        showEntryLink: votingOpen(phase),
         entries,
         votingOpen: votingOpen(phase),
         myVotes: user ? myVotes(db, user.email) : {},
         results: phase === "results" ? getResults(db) : null,
+        votedCategory: c.req.query("voted") || undefined,
         notice: c.req.query("voted") ? s.voted : undefined,
         error: err === "voting_closed" || err === "not_votable" ? errorText(lang, err) : undefined,
       }),
@@ -72,12 +75,13 @@ export function publicRoutes(app: App, { deps, cookieOpts, phaseNow, render }: R
     if (!user) return c.redirect(loginFor("/gallery"));
     const form = await c.req.parseBody();
     const entryId = Number(form.entry);
+    const entry = db.prepare("SELECT category FROM entries WHERE id = ?").get(entryId) as { category: string } | undefined;
     const res = castVote(db, phaseNow(), user.email, entryId, {
       deviceId: c.get("deviceId"),
       ip: c.get("ip"),
       ua: c.req.header("user-agent") ?? "",
       now: deps.now().getTime(),
     });
-    return c.redirect(res.ok ? `/gallery?voted=1#e${entryId}` : `/gallery?e=${res.reason}`);
+    return c.redirect(res.ok ? `/gallery?voted=${entry?.category ?? "1"}#e${entryId}` : `/gallery?e=${res.reason}`);
   });
 }

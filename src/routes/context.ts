@@ -21,5 +21,5 @@ export type RouteCtx = {
   photosDir: string;
   cookieOpts: { path: string; httpOnly: boolean; secure: boolean; sameSite: "Lax" };
   phaseNow: () => Phase;
-  render: (c: Context<Env>, body: Parameters<typeof layout>[2], status?: 200 | 400 | 429) => Response | Promise<Response>;
+  render: (c: Context<Env>, body: Parameters<typeof layout>[3], status?: 200 | 400 | 429) => Response | Promise<Response>;
 };

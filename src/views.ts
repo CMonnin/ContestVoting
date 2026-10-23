@@ -8,6 +8,8 @@ import { t, type Lang } from "./i18n.ts";
 
 type Body = HtmlEscapedString | Promise<HtmlEscapedString>;
 
+export type UserStatus = { hasEntry: boolean; votedIndividual: boolean; votedGroup: boolean };
+
 const CSS = `
 :root { --bg:#0d0716; --bg2:#1d0f2e; --panel:rgba(29,15,46,.78); --line:rgba(255,122,26,.3); --field:#140a22; --field-line:#4a3366; --text:#f3e9ff; --muted:#b9a6d1; --accent:#ff7a1a; --glow:#ffb347; --accent-ink:#1a0b00; --danger:#ff6b6b; }
 * { box-sizing:border-box; }
@@ -15,10 +17,31 @@ const CSS = `
 html { font-size:112.5%; }
 body { margin:0; color:var(--text); font:1rem/1.6 "Fredoka",system-ui,sans-serif; background:radial-gradient(ellipse at 50% 0%, var(--bg2) 0%, var(--bg) 65%) fixed, var(--bg); }
 a { color:var(--glow); }
-.wrap { max-width:640px; margin:0 auto; padding:16px; }
-header { display:flex; flex-direction:column; align-items:flex-end; gap:6px; text-align:right; }
-header a.lang { padding:6px 16px; border-radius:999px; background:rgba(20,10,32,.75); border:1px solid rgba(255,122,26,.35); color:var(--text); text-decoration:none; font-weight:600; letter-spacing:.05em; }
-header form { display:flex; align-items:center; justify-content:flex-end; gap:4px; flex-wrap:wrap; }
+.wrap { max-width:920px; margin:0 auto; padding:16px; }
+header { display:flex; align-items:center; gap:8px; }
+header .nav-links { display:flex; gap:6px; flex:1; min-width:0; overflow-x:auto; scrollbar-width:none; -ms-overflow-style:none; }
+header .nav-links::-webkit-scrollbar { display:none; }
+header .nav-right { display:flex; align-items:center; gap:8px; margin-left:auto; flex:none; }
+header .lang-toggle { flex:none; }
+header .lang-toggle a svg { width:26px; height:26px; }
+.avatar-wrap { position:relative; }
+.avatar-btn { width:38px; height:38px; border-radius:50%; border:2px solid var(--line); background:var(--panel); cursor:pointer; padding:0; display:flex; align-items:center; justify-content:center; transition:border-color .2s, box-shadow .2s; flex:none; }
+.avatar-btn:hover, .avatar-btn:focus-visible { border-color:var(--accent); box-shadow:0 0 12px rgba(255,122,26,.3); }
+.avatar-btn svg { width:28px; height:28px; }
+.avatar-menu { display:none; position:absolute; right:0; top:calc(100% + 8px); min-width:240px; background:var(--bg2); border:1px solid var(--line); border-radius:14px; padding:16px; z-index:100; box-shadow:0 8px 32px rgba(0,0,0,.5); }
+.avatar-menu.open { display:block; }
+.avatar-menu .email { color:var(--glow); font-weight:600; font-size:.95rem; word-break:break-all; margin:0 0 12px; }
+.avatar-menu .status-row { display:flex; align-items:center; gap:8px; color:var(--text); font-size:.9rem; margin:6px 0; }
+.avatar-menu .status-icon { width:22px; height:22px; border-radius:50%; flex:none; display:inline-flex; align-items:center; justify-content:center; font-size:.8rem; font-weight:700; }
+.avatar-menu .status-icon.yes { background:#1f3a1f; color:#6fd06f; }
+.avatar-menu .status-icon.no { background:#4a1717; color:#ff6b6b; }
+.avatar-menu hr { border:none; border-top:1px solid var(--line); margin:12px 0; }
+.avatar-menu button.logout { width:100%; padding:10px; border:1px solid var(--danger); border-radius:999px; background:transparent; color:var(--danger); font:600 .95rem "Fredoka",system-ui,sans-serif; cursor:pointer; }
+.lang-toggle { display:flex; gap:6px; padding:6px; background:var(--field); border:1px solid var(--field-line); border-radius:999px; }
+.lang-toggle a { flex:1; display:flex; align-items:center; justify-content:center; gap:6px; padding:5px 10px; border-radius:999px; text-decoration:none; font:600 .85rem "Fredoka",system-ui,sans-serif; color:var(--muted); transition:background .2s, color .2s; }
+.lang-toggle a svg { width:30px; height:30px; border-radius:50%; background:var(--bg2); flex:none; }
+.lang-toggle a.active { background:var(--accent); color:var(--accent-ink); }
+.lang-toggle a.active svg { background:rgba(255,122,26,.3); }
 h1, h2, h3 { font-family:"Creepster",cursive; font-weight:400; letter-spacing:.04em; }
 h1, h2 { color:var(--accent); }
 h1 { font-size:clamp(2rem,11.5vw,3.4rem); line-height:1; margin:24px 0 16px; text-shadow:0 0 18px rgba(255,122,26,.6), 0 3px 0 #3a1400; }
@@ -51,15 +74,17 @@ legend { font-weight:600; font-size:1.05rem; padding:0; }
 button.danger { background:transparent; box-shadow:none; color:var(--danger); border:1px solid var(--danger); }
 .notice { background:#1f3a1f; color:#c8f0c8; padding:12px 16px; border-radius:12px; }
 .notice.warn { background:#4a3b12; color:#ffd77a; }
+.notice.reminder { background:#4a1717; color:#ff9e9e; }
 .badge { display:inline-block; padding:4px 12px; border-radius:999px; font-weight:600; font-size:.9rem; }
 .badge.pending { background:#4a3b12; color:#ffd77a; }
 .badge.approved { background:#1f3a1f; color:#9be29b; }
 .badge.rejected { background:#4a1717; color:#ff9e9e; }
 .thumbs { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:12px; }
 .thumbs img { width:100%; aspect-ratio:1; object-fit:cover; border-radius:10px; display:block; }
-nav.main { display:flex; gap:8px; flex-wrap:wrap; margin:12px 0 0; }
-nav.main a { background:var(--panel); border:1px solid var(--line); color:var(--text); text-decoration:none; padding:10px 18px; border-radius:999px; font-weight:600; font-size:1.05rem; }
-nav.admin { display:flex; gap:8px; flex-wrap:wrap; margin:16px 0; }
+header .nav-links a { background:var(--panel); border:1px solid var(--line); color:var(--text); text-decoration:none; padding:8px 14px; border-radius:999px; font-weight:600; font-size:.95rem; text-align:center; white-space:nowrap; flex:none; }
+header .nav-links a.current { background:var(--accent); border-color:var(--accent); color:var(--accent-ink); }
+@media (max-width:600px) { header .nav-links a { padding:6px 10px; font-size:.85rem; } }
+nav.admin { display:flex; gap:8px; flex-wrap:wrap; margin:16px 0; padding-top:14px; border-top:1px solid var(--line); }
 nav.admin a { padding:8px 14px; border-radius:999px; border:1px solid var(--field-line); color:var(--muted); text-decoration:none; font-weight:600; }
 nav.admin a.current { background:var(--accent); border-color:var(--accent); color:var(--accent-ink); }
 nav.admin + * { margin-top:0; }
@@ -75,14 +100,24 @@ button.small { width:auto; margin:0; padding:4px 10px; font-size:.85rem; }
 .gallery { display:grid; gap:16px; }
 .card { background:var(--panel); border:1px solid var(--line); border-radius:18px; padding:12px 12px 16px; }
 .card.voted { border:2px solid #6fd06f; box-shadow:0 0 24px rgba(111,208,111,.25); }
-.card .badge { display:block; text-align:center; margin:14px 0 0; padding:13px; font-size:1.1rem; }
+.card .badge { display:flex; align-items:center; justify-content:center; gap:8px; margin:14px 0 0; padding:13px; font-size:1.1rem; }
+.check-icon { display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px; border-radius:50%; background:#6fd06f; color:#1a0b00; font-weight:700; font-size:.9rem; flex:none; }
 .card p { margin:6px 4px 0; }
 .card h3 { margin-left:4px; margin-right:4px; }
 button.secondary { background:transparent; color:var(--glow); border:1.5px solid var(--glow); box-shadow:none; }
 .btn { display:inline-block; margin-top:4px; padding:12px 24px; border-radius:999px; text-decoration:none; font-weight:600; font-size:1.05rem; color:var(--accent-ink); background:var(--accent); box-shadow:0 0 18px rgba(255,122,26,.25); }
-.card img.cover { width:100%; height:auto; max-height:75vh; object-fit:contain; border-radius:12px; display:block; background:var(--field); }
+.card img.cover { width:100%; height:auto; max-height:75vh; object-fit:contain; border-radius:12px; display:block; background:var(--field); cursor:pointer; }
+.lightbox { display:none; position:fixed; inset:0; z-index:200; background:rgba(0,0,0,.85); align-items:center; justify-content:center; padding:16px; backdrop-filter:blur(4px); }
+.lightbox.open { display:flex; }
+.lightbox img { max-width:100%; max-height:90vh; object-fit:contain; border-radius:12px; }
+.lightbox-close { position:absolute; top:16px; right:16px; width:44px; height:44px; border-radius:50%; border:2px solid rgba(255,255,255,.4); background:rgba(0,0,0,.6); color:#fff; font-size:1.4rem; cursor:pointer; display:flex; align-items:center; justify-content:center; z-index:201; }
 .card h3 { font-size:1.8rem; line-height:1.1; margin:14px 0 6px; }
 section > h2 { font-size:clamp(2.2rem,10vw,2.8rem); margin:36px 0 14px; text-shadow:0 0 14px rgba(255,122,26,.5), 0 3px 0 #3a1400; }
+.cat-tabs { display:flex; gap:8px; margin:24px 0 8px; }
+.cat-tabs button { flex:1; padding:14px 12px; font:600 1.15rem "Creepster",cursive; letter-spacing:.04em; border:2px solid var(--line); border-radius:14px; background:var(--panel); color:var(--muted); cursor:pointer; transition:border-color .2s, color .2s, background .2s; }
+.cat-tabs button[aria-selected="true"] { border-color:var(--accent); color:var(--accent); background:rgba(255,122,26,.1); box-shadow:0 0 18px rgba(255,122,26,.15); }
+.cat-tabs button:focus-visible { outline:2px solid var(--glow); outline-offset:2px; }
+section.cat-section { display:none; } section.cat-section.active { display:block; }
 /* Night scene, flying bats, fog and footer: copied from the organizers' index.html. */
 .wrap { position:relative; z-index:1; }
 .sky { position:fixed; top:3vh; left:4vw; width:220px; height:200px; z-index:0; transform-origin:top left; pointer-events:none; }
@@ -134,7 +169,7 @@ footer { text-align:center; margin:40px 0 16px; }
 /* Keep the page clear of the moon until the content column is wide of it. */
 @media (max-width:1170px) { .wrap { padding-top:96px; } }
 /* On phones the header sits beside the shrunken moon and the nav starts below it. */
-@media (max-width:600px) { .sky { top:4px; left:4px; transform:scale(.6); opacity:.75; } .wrap { padding-top:16px; } header { min-height:104px; padding-left:132px; } }
+@media (max-width:600px) { .sky { top:4px; left:4px; transform:scale(.6); opacity:.75; } .wrap { padding-top:16px; } }
 @media (prefers-reduced-motion:reduce) { *, *::before, *::after { animation:none !important; transition-duration:.01ms !important; } }
 `;
 
@@ -187,9 +222,18 @@ const GRAVEYARD = `<svg class="graveyard" viewBox="0 0 900 70" preserveAspectRat
   <path d="M400 24 l-3 4 h6z M430 24 l-3 4 h6z M460 24 l-3 4 h6z M490 24 l-3 4 h6z"/>
 </svg>`;
 
-export function layout(lang: Lang, user: User | null, body: Body): Body {
+const GHOST = `<svg viewBox="0 0 32 32" fill="none" aria-hidden="true">
+  <path d="M16 2C10 2 6 7 6 13v13l3-3 3 3 3-3 3 3 3-3 3 3V13c0-6-4-11-10-11z" fill="#f3e9ff" opacity=".9"/>
+  <circle cx="12" cy="14" r="2.5" fill="#1a0b00"/><circle cx="20" cy="14" r="2.5" fill="#1a0b00"/>
+  <ellipse cx="16" cy="20" rx="3" ry="2" fill="#1a0b00"/>
+</svg>`;
+
+const VAMPIRE = `<svg viewBox="0 0 40 40" aria-hidden="true"><path d="M4 40c1-9 7-13 16-13s15 4 16 13z" fill="#7a0d1e"/><path d="M8 31l6 9h12l6-9-12 4z" fill="#111"/><circle cx="20" cy="19" r="9" fill="#e8e3f0"/><path d="M11 17c0-7 4-10 9-10s9 3 9 10l-3-3-3 4-3-5-3 5-3-4z" fill="#1a1024"/><circle cx="16.5" cy="19" r="1.4" fill="#c4122f"/><circle cx="23.5" cy="19" r="1.4" fill="#c4122f"/><path d="M16.5 23.5q3.5 2 7 0" stroke="#5a1020" stroke-width="1.2" fill="none"/><path d="M17.6 24l.7 2 .7-1.7M21 24.3l.7 1.7.7-2" fill="#fff"/></svg>`;
+const WITCH = `<svg viewBox="0 0 40 40" aria-hidden="true"><path d="M5 40c1-8 7-12 15-12s14 4 15 12z" fill="#4b2a7a"/><path d="M10 18c-2 6-2 12 0 16h4v-14zM30 18c2 6 2 12 0 16h-4v-14z" fill="#ff7a1a"/><circle cx="20" cy="21" r="8.5" fill="#cdeccc"/><ellipse cx="20" cy="14" rx="15" ry="3" fill="#1a1024"/><path d="M13 14l6-12c1-1 3 0 3 1l5 11z" fill="#1a1024"/><rect x="13.5" y="11" width="13" height="2.2" fill="#ff7a1a"/><circle cx="17" cy="21" r="1.3" fill="#1a1024"/><circle cx="23" cy="21" r="1.3" fill="#1a1024"/><path d="M17 25q3 2.2 6 0" stroke="#1a1024" stroke-width="1.2" fill="none"/><circle cx="15" cy="23.6" r="1" fill="#f59ab0" opacity=".7"/><circle cx="25" cy="23.6" r="1" fill="#f59ab0" opacity=".7"/></svg>`;
+
+export function layout(lang: Lang, user: User | null, path: string, body: Body, status?: UserStatus): Body {
   const s = t(lang);
-  const other = lang === "fr" ? "en" : "fr";
+  const cur = (href: string) => (href === "/" ? path === "/" : path.startsWith(href)) ? " current" : "";
   return html`<!doctype html>
 <html lang="${lang}">
 <head>
@@ -204,27 +248,49 @@ export function layout(lang: Lang, user: User | null, body: Body): Body {
 ${raw(SCENE)}
 <div class="wrap">
 <header>
-  <a class="lang" href="/lang/${other}">${s.switchLang}</a>
-  ${user
-    ? html`<form method="post" action="/logout" style="margin:0">
-        <span class="help">${s.loggedInAs} ${user.email}</span>
-        <button class="link" type="submit">${s.logout}</button>
-      </form>`
-    : ""}
+  <div class="nav-links">
+    <a href="/" class="${cur("/")}">${s.home}</a>
+    <a href="/gallery" class="${cur("/gallery")}">${s.gallery}</a>
+    ${user ? html`<a href="/me/entry" class="${cur("/me/entry")}">${s.myEntry}</a>` : ""}
+    ${user?.isAdmin ? html`<a href="/admin" class="${cur("/admin")}">Admin</a>` : ""}
+    ${user ? "" : html`<a href="/login" class="${cur("/login")}">${s.login}</a>`}
+  </div>
+  <div class="nav-right">
+    ${user
+      ? html`<div class="avatar-wrap">
+          <button class="avatar-btn" type="button" aria-label="Account" onclick="this.nextElementSibling.classList.toggle('open')">${raw(GHOST)}</button>
+          <div class="avatar-menu" onclick="event.stopPropagation()">
+            <p class="email">${user.email}</p>
+            <div class="status-row"><span class="status-icon ${status?.hasEntry ? "yes" : "no"}">${status?.hasEntry ? "✓" : "✗"}</span>${s.avatarEntry}</div>
+            <div class="status-row"><span class="status-icon ${status?.votedIndividual ? "yes" : "no"}">${status?.votedIndividual ? "✓" : "✗"}</span>${s.avatarVoteIndividual}</div>
+            <div class="status-row"><span class="status-icon ${status?.votedGroup ? "yes" : "no"}">${status?.votedGroup ? "✓" : "✗"}</span>${s.avatarVoteGroup}</div>
+            <hr>
+            <form method="post" action="/logout"${!status?.votedIndividual || !status?.votedGroup ? ` onsubmit="return confirm('${(!status?.votedIndividual || !status?.votedGroup) ? `${s.logoutWarnPrefix}\\n${!status?.votedIndividual ? `• ${s.logoutWarnIndividual}\\n` : ""}${!status?.votedGroup ? `• ${s.logoutWarnGroup}\\n` : ""}\\n` : ""}${s.logoutWarnConfirm}')"` : ""}><button class="logout" type="submit">${s.logout}</button></form>
+            <hr>
+            <div class="lang-toggle">
+              <a href="/lang/en" class="${lang === "en" ? "active" : ""}">${raw(VAMPIRE)} EN</a>
+              <a href="/lang/fr" class="${lang === "fr" ? "active" : ""}">${raw(WITCH)} FR</a>
+            </div>
+          </div>
+        </div>`
+      : html`<div class="lang-toggle">
+              <a href="/lang/en" class="${lang === "en" ? "active" : ""}">${raw(VAMPIRE)} EN</a>
+              <a href="/lang/fr" class="${lang === "fr" ? "active" : ""}">${raw(WITCH)} FR</a>
+            </div>`}
+  </div>
 </header>
-<nav class="main">
-  <a href="/">${s.home}</a>
-  <a href="/gallery">${s.gallery}</a>
-  ${user ? html`<a href="/me/entry">${s.myEntry}</a>` : ""}
-  ${user?.isAdmin ? html`<a href="/admin">Admin</a>` : ""}
-  ${user ? "" : html`<a href="/login">${s.login}</a>`}
-</nav>
+<script>document.addEventListener('click',e=>{if(!e.target.closest('.avatar-wrap'))document.querySelector('.avatar-menu')?.classList.remove('open')})</script>
 ${body}
 <footer>
   <div class="farewell">${raw(JACK)}<span>${s.poweredBy}</span>${raw(JACK)}</div>
   ${raw(GRAVEYARD)}
 </footer>
 </div>
+<div class="lightbox" id="lightbox" onclick="if(event.target===this)this.classList.remove('open')">
+  <button class="lightbox-close" onclick="document.getElementById('lightbox').classList.remove('open')" aria-label="Close">&times;</button>
+  <img id="lightbox-img" src="" alt="">
+</div>
+<script>document.addEventListener('click',function(e){var a=e.target.closest('.card a[href*="/photos/"]');if(a){e.preventDefault();var img=a.querySelector('img');var src=img?img.src.replace(/\/thumb_/,'/'):a.href;document.getElementById('lightbox-img').src=a.href;document.getElementById('lightbox').classList.add('open')}});document.addEventListener('keydown',function(e){if(e.key==='Escape')document.getElementById('lightbox').classList.remove('open')})</script>
 </body>
 </html>`;
 }
@@ -234,11 +300,11 @@ export function homePage(
   opts: {
     phaseText: string;
     user: User | null;
-    showEntryLink: boolean;
     entries: GalleryEntry[];
     votingOpen: boolean;
     myVotes: MyVotes;
     results: Results | null;
+    votedCategory?: string;
     notice?: string;
     error?: string;
   },
@@ -247,7 +313,7 @@ export function homePage(
   const voteControl = (e: GalleryEntry) => {
     if (!opts.votingOpen || !opts.user) return "";
     const mine = opts.myVotes[e.category];
-    if (mine === e.id) return html`<p class="badge approved">${s.yourVote}</p>`;
+    if (mine === e.id) return html`<p class="badge approved">${s.yourVote} <span class="check-icon">✓</span></p>`;
     return html`<form method="post" action="/vote"><input type="hidden" name="entry" value="${e.id}"><button class="${mine ? "secondary" : ""}" type="submit">${mine ? s.changeVote : s.vote}</button></form>`;
   };
   const card = (e: GalleryEntry) => html`<article class="card${opts.myVotes[e.category] === e.id ? " voted" : ""}" id="e${e.id}">
@@ -259,9 +325,16 @@ export function homePage(
   ${e.caption ? html`<p>${e.caption}</p>` : ""}
   ${voteControl(e)}
 </article>`;
+  const votedCat = opts.votedCategory;
+  const otherCat = votedCat && CATEGORIES.includes(votedCat as any)
+    ? CATEGORIES.find((c) => c !== votedCat)
+    : undefined;
+  const needsReminder = otherCat && !opts.myVotes[otherCat];
   return html`<h1>🎃 ${s.title}</h1>
 ${opts.notice ? html`<p class="notice" role="status">${opts.notice}</p>` : ""}
+${needsReminder ? html`<p class="notice reminder" role="status">${s.voteReminder.replace("{cat}", s.categories[otherCat])}</p>` : ""}
 ${opts.error ? html`<p class="error" role="alert">${opts.error}</p>` : ""}
+${votedCat ? html`<script>setTimeout(function(){window.scrollTo({top:0,behavior:'smooth'})},3000)</script>` : ""}
 ${opts.results
     ? html`<div class="panel winners">
   <h2>${s.winners}</h2>
@@ -279,17 +352,19 @@ ${opts.results
   <p><strong>${opts.phaseText}</strong></p>
   ${opts.votingOpen ? html`<p>${s.votePerCategory}</p>` : ""}
   ${opts.user
-    ? opts.showEntryLink ? html`<p><a class="btn" href="/me/entry">${s.myEntry}</a></p>` : ""
+    ? ""
     : html`${opts.votingOpen ? html`<p>${s.loginToVote}</p>` : ""}<p><a class="btn" href="/login?next=/gallery">${s.login}</a></p>`}
 </div>
 ${opts.entries.length === 0
     ? html`<p class="help">${s.galleryEmpty}</p>`
-    : CATEGORIES.map((c) => {
+    : html`<div class="cat-tabs" role="tablist">
+  ${CATEGORIES.map((c) => html`<button role="tab" aria-selected="false" aria-controls="cat-${c}" data-cat="${c}" onclick="document.querySelectorAll('.cat-tabs button').forEach(b=>b.setAttribute('aria-selected','false'));this.setAttribute('aria-selected','true');document.querySelectorAll('.cat-section').forEach(s=>s.classList.remove('active'));document.getElementById('cat-'+this.dataset.cat).classList.add('active')">${s.categories[c]}</button>`)}
+</div>
+${CATEGORIES.map((c) => {
         const inCat = opts.entries.filter((e) => e.category === c);
-        return inCat.length
-          ? html`<section id="${c}"><h2>${s.categories[c]}</h2><div class="gallery">${inCat.map(card)}</div></section>`
-          : "";
-      })}`;
+        return html`<section id="cat-${c}" class="cat-section"><h2>${s.categories[c]}</h2>${inCat.length ? html`<div class="gallery">${inCat.map(card)}</div>` : html`<p class="help">${s.galleryEmpty}</p>`}</section>`;
+      })}
+<script>(function(){var h=location.hash.slice(1);var voted=new URLSearchParams(location.search).get('voted');var el=h&&document.getElementById(h);var cat=el?el.closest('.cat-section'):null;var tab=cat?document.querySelector('.cat-tabs button[data-cat="'+cat.id.replace('cat-','')+'"]'):voted?document.querySelector('.cat-tabs button[data-cat="'+voted+'"]'):null;(tab||document.querySelector('.cat-tabs button')).click()})()</script>`}`;
 }
 
 export type EntryFormValues = { name: string; category: string; caption: string };
@@ -397,4 +472,67 @@ ${email
   <a class="help" href="${again}">${s.otherEmail}</a>
 </form>`
     : html`<p style="text-align:center"><a class="help" href="${again}">${s.sendCode}</a></p>`}`;
+}
+
+/** Nav bar HTML to inject into the static landing page. Returns raw HTML string. */
+export function landingNav(lang: Lang, user: User | null, status?: UserStatus): string {
+  const s = t(lang);
+  const esc = (v: string) => v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+  const links = [
+    `<a href="/" class="current">${esc(s.home)}</a>`,
+    `<a href="/gallery">${esc(s.gallery)}</a>`,
+    ...(user ? [`<a href="/me/entry">${esc(s.myEntry)}</a>`] : []),
+    ...(user?.isAdmin ? [`<a href="/admin">Admin</a>`] : []),
+    ...(!user ? [`<a href="/login">${esc(s.login)}</a>`] : []),
+  ];
+  const ghostSvg = `<svg viewBox="0 0 32 32" fill="none" style="width:28px;height:28px"><path d="M16 2C10 2 6 7 6 13v13l3-3 3 3 3-3 3 3 3-3 3 3V13c0-6-4-11-10-11z" fill="#f3e9ff" opacity=".9"/><circle cx="12" cy="14" r="2.5" fill="#1a0b00"/><circle cx="20" cy="14" r="2.5" fill="#1a0b00"/><ellipse cx="16" cy="20" rx="3" ry="2" fill="#1a0b00"/></svg>`;
+  const vampireSvg = `<svg viewBox="0 0 40 40" style="width:30px;height:30px;border-radius:50%;background:#2b1840;flex:none"><path d="M4 40c1-9 7-13 16-13s15 4 16 13z" fill="#7a0d1e"/><path d="M8 31l6 9h12l6-9-12 4z" fill="#111"/><circle cx="20" cy="19" r="9" fill="#e8e3f0"/><path d="M11 17c0-7 4-10 9-10s9 3 9 10l-3-3-3 4-3-5-3 5-3-4z" fill="#1a1024"/><circle cx="16.5" cy="19" r="1.4" fill="#c4122f"/><circle cx="23.5" cy="19" r="1.4" fill="#c4122f"/><path d="M16.5 23.5q3.5 2 7 0" stroke="#5a1020" stroke-width="1.2" fill="none"/><path d="M17.6 24l.7 2 .7-1.7M21 24.3l.7 1.7.7-2" fill="#fff"/></svg>`;
+  const witchSvg = `<svg viewBox="0 0 40 40" style="width:30px;height:30px;border-radius:50%;background:#2b1840;flex:none"><path d="M5 40c1-8 7-12 15-12s14 4 15 12z" fill="#4b2a7a"/><path d="M10 18c-2 6-2 12 0 16h4v-14zM30 18c2 6 2 12 0 16h-4v-14z" fill="#ff7a1a"/><circle cx="20" cy="21" r="8.5" fill="#cdeccc"/><ellipse cx="20" cy="14" rx="15" ry="3" fill="#1a1024"/><path d="M13 14l6-12c1-1 3 0 3 1l5 11z" fill="#1a1024"/><rect x="13.5" y="11" width="13" height="2.2" fill="#ff7a1a"/><circle cx="17" cy="21" r="1.3" fill="#1a1024"/><circle cx="23" cy="21" r="1.3" fill="#1a1024"/><path d="M17 25q3 2.2 6 0" stroke="#1a1024" stroke-width="1.2" fill="none"/><circle cx="15" cy="23.6" r="1" fill="#f59ab0" opacity=".7"/><circle cx="25" cy="23.6" r="1" fill="#f59ab0" opacity=".7"/></svg>`;
+  const rightContent = user
+    ? `<div class="app-avatar-wrap">
+<button class="app-avatar-btn" type="button" onclick="this.nextElementSibling.classList.toggle('open')">${ghostSvg}</button>
+<div class="app-avatar-menu" onclick="event.stopPropagation()">
+<p class="app-email">${esc(user.email)}</p>
+<div class="app-sr"><span class="app-si ${status?.hasEntry ? "yes" : "no"}">${status?.hasEntry ? "✓" : "✗"}</span>${esc(s.avatarEntry)}</div>
+<div class="app-sr"><span class="app-si ${status?.votedIndividual ? "yes" : "no"}">${status?.votedIndividual ? "✓" : "✗"}</span>${esc(s.avatarVoteIndividual)}</div>
+<div class="app-sr"><span class="app-si ${status?.votedGroup ? "yes" : "no"}">${status?.votedGroup ? "✓" : "✗"}</span>${esc(s.avatarVoteGroup)}</div>
+<hr class="app-hr">
+<form method="post" action="/logout"${!status?.votedIndividual || !status?.votedGroup ? ` onsubmit="return confirm('${`${esc(s.logoutWarnPrefix)}\\n${!status?.votedIndividual ? `• ${esc(s.logoutWarnIndividual)}\\n` : ""}${!status?.votedGroup ? `• ${esc(s.logoutWarnGroup)}\\n` : ""}\\n`}${esc(s.logoutWarnConfirm)}')"` : ""}><button class="app-logout-btn" type="submit">${esc(s.logout)}</button></form>
+<hr class="app-hr">
+<div class="app-lt">
+<a href="/lang/en" class="${lang === "en" ? "active" : ""}">${vampireSvg} EN</a>
+<a href="/lang/fr" class="${lang === "fr" ? "active" : ""}">${witchSvg} FR</a>
+</div>
+</div></div>`
+    : `<div class="app-lt">
+<a href="/lang/en" class="${lang === "en" ? "active" : ""}">${vampireSvg} EN</a>
+<a href="/lang/fr" class="${lang === "fr" ? "active" : ""}">${witchSvg} FR</a>
+</div>`;
+  return `<style>
+.lang{display:none!important}
+.app-bar{position:relative;z-index:10;display:flex;align-items:center;gap:8px;max-width:920px;margin:0 auto;padding:16px 16px 0;font-family:"Fredoka",system-ui,sans-serif}
+.app-bar .app-links{display:flex;gap:8px;flex:1;min-width:0;overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none}
+.app-bar .app-links::-webkit-scrollbar{display:none}
+.app-bar .app-right{display:flex;align-items:center;gap:8px;margin-left:auto;flex:none}
+.app-bar a{background:rgba(29,15,46,.78);border:1px solid rgba(255,122,26,.3);color:#f3e9ff;text-decoration:none;padding:10px 14px;border-radius:999px;font-weight:600;font-size:1rem;text-align:center;white-space:nowrap}
+.app-bar a.current{background:#ff7a1a;border-color:#ff7a1a;color:#1a0b00}
+.app-avatar-wrap{position:relative}
+.app-avatar-btn{width:38px;height:38px;border-radius:50%;border:2px solid rgba(255,122,26,.3);background:rgba(29,15,46,.78);cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;transition:border-color .2s,box-shadow .2s;flex:none}
+.app-avatar-btn:hover,.app-avatar-btn:focus-visible{border-color:#ff7a1a;box-shadow:0 0 12px rgba(255,122,26,.3)}
+.app-avatar-menu{display:none;position:absolute;right:0;top:calc(100% + 8px);min-width:240px;background:#1d0f2e;border:1px solid rgba(255,122,26,.3);border-radius:14px;padding:16px;z-index:100;box-shadow:0 8px 32px rgba(0,0,0,.5)}
+.app-avatar-menu.open{display:block}
+.app-email{color:#ffb347;font-weight:600;font-size:.95rem;word-break:break-all;margin:0 0 12px}
+.app-sr{display:flex;align-items:center;gap:8px;color:#f3e9ff;font-size:.9rem;margin:6px 0}
+.app-si{width:22px;height:22px;border-radius:50%;flex:none;display:inline-flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700}
+.app-si.yes{background:#1f3a1f;color:#6fd06f}.app-si.no{background:#4a1717;color:#ff6b6b}
+.app-hr{border:none;border-top:1px solid rgba(255,122,26,.3);margin:12px 0}
+.app-logout-btn{width:100%;padding:10px;border:1px solid #ff6b6b;border-radius:999px;background:transparent;color:#ff6b6b;font:600 .95rem "Fredoka",system-ui,sans-serif;cursor:pointer}
+.app-lt{display:flex;gap:4px;padding:4px;background:rgba(20,10,32,.75);border:1px solid rgba(255,122,26,.35);border-radius:999px}
+.app-lt a{flex:none;display:flex;align-items:center;gap:4px;padding:3px 8px 3px 3px;border-radius:999px;text-decoration:none;font:600 .8rem "Fredoka",system-ui,sans-serif;color:#b9a6d1;background:transparent;border:none;transition:background .2s,color .2s}
+.app-lt a svg{width:26px;height:26px}
+.app-lt a.active{background:#ff7a1a;color:#1a0b00}
+@media(max-width:600px){.app-bar a{padding:8px 10px;font-size:.9rem}}
+</style>
+<nav class="app-bar"><div class="app-links">${links.join("")}</div><div class="app-right">${rightContent}</div></nav>
+<script>document.addEventListener('click',function(e){if(!e.target.closest('.app-avatar-wrap')){var m=document.querySelector('.app-avatar-menu');if(m)m.classList.remove('open')}})</script>`;
 }

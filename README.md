@@ -27,6 +27,34 @@ npm run typecheck
 
 To try the open phase before the contest, set `OPEN_AT` to a past time in `.env`.
 
+### Test entries
+
+Drop image files into `images/test-entries/` to pre-populate the gallery:
+
+```
+images/test-entries/
+  individual/     ← one image per entry (category: individual)
+  team/           ← one image per entry (category: group)
+```
+
+On startup the app scans these folders, processes each image through the
+normal photo pipeline (resize, WebP, strip metadata), and inserts it as a
+pre-approved entry. The entry name comes from the filename (e.g. `tom.png`
+→ "Tom"). Each entry gets a synthetic owner (`test-<file>@test.invalid`),
+so seeding is idempotent — restarting won't duplicate entries.
+
+The `images/test-entries/` directory is gitignored. To use it:
+
+```sh
+mkdir -p images/test-entries/individual images/test-entries/team
+cp ~/photos/alice.png images/test-entries/individual/
+cp ~/photos/team-photo.jpg images/test-entries/team/
+npm run dev
+```
+
+In Docker, mount or copy the images into the container's
+`images/test-entries/` before starting. They are only read at startup.
+
 ## Deploy (DNP server)
 
 Step by step for the sysadmin, including the test round, launch

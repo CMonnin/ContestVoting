@@ -19,13 +19,15 @@ import {
 } from "./routes/context.ts";
 import { entryRoutes } from "./routes/entries.ts";
 import { publicRoutes } from "./routes/public.ts";
-import { layout } from "./views.ts";
+import { getEntryByOwner } from "./entries.ts";
+import { myVotes } from "./votes.ts";
+import { layout, type UserStatus } from "./views.ts";
 
 const CSP = [
   "default-src 'self'",
   "img-src 'self' data:",
   "style-src 'self' 'unsafe-inline'",
-  "script-src 'self'",
+  "script-src 'self' 'unsafe-inline'",
   "form-action 'self'",
   "frame-ancestors 'none'",
   "base-uri 'none'",
@@ -45,6 +47,7 @@ export function createApp(deps: AuthDeps) {
     c.header("X-Content-Type-Options", "nosniff");
     c.header("Referrer-Policy", "same-origin");
     c.header("X-Robots-Tag", "noindex");
+    c.header("Cache-Control", "no-store");
 
     // Caddy appends the real client address as the last X-Forwarded-For entry.
     const xff = c.req.header("x-forwarded-for");
@@ -73,7 +76,13 @@ export function createApp(deps: AuthDeps) {
     return next();
   });
 
-  const render: RouteCtx["render"] = (c, body, status = 200) => c.html(layout(c.get("lang"), c.get("user"), body), status);
+  const render: RouteCtx["render"] = (c, body, status = 200) => {
+    const user = c.get("user");
+    const us: UserStatus | undefined = user
+      ? { hasEntry: !!getEntryByOwner(db, user.email), ...(() => { const v = myVotes(db, user.email); return { votedIndividual: !!v.individual, votedGroup: !!v.group }; })() }
+      : undefined;
+    return c.html(layout(c.get("lang"), user, new URL(c.req.url).pathname, body, us), status);
+  };
   const photosDir = join(cfg.dataDir, "photos");
   const ctx: RouteCtx = { deps, photosDir, cookieOpts, phaseNow, render };
 
